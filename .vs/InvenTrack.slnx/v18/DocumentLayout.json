@@ -1,0 +1,54 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\developer\\projects\\RealProjects\\InvenTrack\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{C75D061D-2269-450A-8FFC-BEEE8117FF47}|NewFolder1{C75D061D-2269-450A-8FFC-BEEE8117FF47}|D:\\developer\\projects\\RealProjects\\InvenTrack\\agent.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{C75D061D-2269-450A-8FFC-BEEE8117FF47}|NewFolder1{C75D061D-2269-450A-8FFC-BEEE8117FF47}|solutionrelative:agent.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BA208E56-43F9-40CE-A81B-9200FED01194}|NewFolder1{BA208E56-43F9-40CE-A81B-9200FED01194}|D:\\developer\\projects\\RealProjects\\InvenTrack\\AGENTS.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{BA208E56-43F9-40CE-A81B-9200FED01194}|NewFolder1{BA208E56-43F9-40CE-A81B-9200FED01194}|solutionrelative:AGENTS.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "agent.md",
+              "DocumentMoniker": "D:\\developer\\projects\\RealProjects\\InvenTrack\\agent.md",
+              "RelativeDocumentMoniker": "agent.md",
+              "ToolTip": "D:\\developer\\projects\\RealProjects\\InvenTrack\\agent.md",
+              "RelativeToolTip": "agent.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-08-04T03:31:42.704Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AGENTS.md",
+              "DocumentMoniker": "D:\\developer\\projects\\RealProjects\\InvenTrack\\AGENTS.md",
+              "RelativeDocumentMoniker": "AGENTS.md",
+              "ToolTip": "D:\\developer\\projects\\RealProjects\\InvenTrack\\AGENTS.md",
+              "RelativeToolTip": "AGENTS.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAABLAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-08-04T03:28:52.282Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+@InvenTrack.API_HostAddress = http://localhost:5047
+
+GET {{InvenTrack.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
