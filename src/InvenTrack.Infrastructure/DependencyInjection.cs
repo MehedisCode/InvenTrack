@@ -20,7 +20,6 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        // Use AddIdentityCore so Identity doesn't override DefaultAuthenticateScheme with cookies
         services.AddIdentityCore<User>(options =>
         {
             options.Password.RequireDigit = true;
@@ -67,6 +66,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
