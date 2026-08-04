@@ -68,6 +68,10 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICategoryRepository, InvenTrack.Infrastructure.Persistence.Repositories.CategoryRepository>();
+        services.AddScoped<ISupplierRepository, InvenTrack.Infrastructure.Persistence.Repositories.SupplierRepository>();
+        services.AddScoped<IProductRepository, InvenTrack.Infrastructure.Persistence.Repositories.ProductRepository>();
+        services.AddScoped<IInventoryRepository, InvenTrack.Infrastructure.Persistence.Repositories.InventoryRepository>();
 
         return services;
     }
