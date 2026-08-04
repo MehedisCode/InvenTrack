@@ -20,13 +20,14 @@ public class SupplierRepository : ISupplierRepository
     public async Task<Supplier?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Suppliers
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == id && s.IsActive, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Supplier>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Suppliers
             .AsNoTracking()
+            .Where(s => s.IsActive)
             .ToListAsync(cancellationToken);
     }
 
@@ -34,9 +35,10 @@ public class SupplierRepository : ISupplierRepository
     {
         return await _context.Suppliers
             .AsNoTracking()
-            .Where(s => EF.Functions.ILike(s.CompanyName, $"%{term}%") || 
-                        EF.Functions.ILike(s.ContactPerson, $"%{term}%") || 
-                        EF.Functions.ILike(s.Email, $"%{term}%"))
+            .Where(s => s.IsActive && 
+                        (EF.Functions.ILike(s.CompanyName, $"%{term}%") || 
+                         EF.Functions.ILike(s.ContactPerson, $"%{term}%") || 
+                         EF.Functions.ILike(s.Email, $"%{term}%")))
             .ToListAsync(cancellationToken);
     }
 

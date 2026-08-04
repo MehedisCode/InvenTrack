@@ -33,6 +33,20 @@ builder.Services.AddSwaggerGen(options =>
     {
         { new OpenApiSecuritySchemeReference("Bearer", doc), new List<string>() }
     });
+
+    var apiXmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var apiXmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, apiXmlFile);
+    if (System.IO.File.Exists(apiXmlPath))
+    {
+        options.IncludeXmlComments(apiXmlPath);
+    }
+
+    var appXmlFile = "InvenTrack.Application.xml";
+    var appXmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, appXmlFile);
+    if (System.IO.File.Exists(appXmlPath))
+    {
+        options.IncludeXmlComments(appXmlPath);
+    }
 });
 
 var app = builder.Build();

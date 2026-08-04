@@ -23,7 +23,7 @@ public class ProductRepository : IProductRepository
         return await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Supplier)
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken);
     }
 
     public async Task<PaginatedList<Product>> GetProductsAsync(ProductQueryParameters parameters, CancellationToken cancellationToken = default)
@@ -31,6 +31,7 @@ public class ProductRepository : IProductRepository
         var query = _context.Products
             .Include(p => p.Category)
             .Include(p => p.Supplier)
+            .Where(p => p.IsActive)
             .AsNoTracking()
             .AsQueryable();
 
