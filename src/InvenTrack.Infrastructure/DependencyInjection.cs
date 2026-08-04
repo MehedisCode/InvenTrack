@@ -20,7 +20,8 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddIdentity<User, Role>(options =>
+        // Use AddIdentityCore so Identity doesn't override DefaultAuthenticateScheme with cookies
+        services.AddIdentityCore<User>(options =>
         {
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
@@ -29,6 +30,7 @@ public static class DependencyInjection
             options.Password.RequiredLength = 6;
             options.User.RequireUniqueEmail = true;
         })
+        .AddRoles<Role>()
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
@@ -42,6 +44,7 @@ public static class DependencyInjection
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
@@ -63,6 +66,7 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
