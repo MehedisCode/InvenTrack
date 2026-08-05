@@ -1,5 +1,6 @@
 namespace InvenTrack.API.Controllers;
 
+using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Users.Commands.CreateUser;
 using InvenTrack.Application.Features.Users.Commands.DeleteUser;
 using InvenTrack.Application.Features.Users.Commands.UpdateUser;
@@ -10,7 +11,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-[Authorize]
+[Authorize(Roles = Roles.Admin)]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase

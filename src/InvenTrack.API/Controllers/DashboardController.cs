@@ -18,7 +18,7 @@ public class DashboardController : ControllerBase
         _sender = sender;
     }
 
-    /// <summary>Returns inventory statistics for the dashboard.</summary>
+    /// <summary>Returns inventory statistics for the dashboard (all roles).</summary>
     [HttpGet]
     public async Task<IActionResult> GetDashboard()
     {

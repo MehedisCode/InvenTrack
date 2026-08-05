@@ -21,6 +21,7 @@ public class PurchasesController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>Get all purchases (all roles).</summary>
     [HttpGet]
     public async Task<IActionResult> GetAllPurchases()
     {
@@ -28,6 +29,7 @@ public class PurchasesController : ControllerBase
         return Ok(purchases);
     }
 
+    /// <summary>Get a purchase by Id (all roles).</summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetPurchaseById(Guid id)
     {
@@ -38,6 +40,7 @@ public class PurchasesController : ControllerBase
         return Ok(purchase);
     }
 
+    /// <summary>Create a new purchase (all roles).</summary>
     [HttpPost]
     public async Task<IActionResult> CreatePurchase([FromBody] CreatePurchaseCommand command)
     {

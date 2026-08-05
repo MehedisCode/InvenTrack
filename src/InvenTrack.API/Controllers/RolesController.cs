@@ -1,11 +1,12 @@
 namespace InvenTrack.API.Controllers;
 
+using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Roles.Queries.GetAllRoles;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-[Authorize]
+[Authorize(Roles = Roles.Admin)]
 [ApiController]
 [Route("api/[controller]")]
 public class RolesController : ControllerBase

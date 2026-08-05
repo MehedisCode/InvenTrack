@@ -1,3 +1,4 @@
+using InvenTrack.API.Middleware;
 using InvenTrack.Application;
 using InvenTrack.Infrastructure;
 using Microsoft.OpenApi;
@@ -62,6 +63,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

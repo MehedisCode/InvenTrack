@@ -19,6 +19,7 @@ public class InventoryController : ControllerBase
         _sender = sender;
     }
 
+    /// <summary>Record a manual stock-in transaction (all roles).</summary>
     [HttpPost("stock-in")]
     public async Task<IActionResult> StockIn(StockInCommand command)
     {
@@ -26,6 +27,7 @@ public class InventoryController : ControllerBase
         return Ok(new { TransactionId = result });
     }
 
+    /// <summary>Record a manual stock-out transaction (all roles).</summary>
     [HttpPost("stock-out")]
     public async Task<IActionResult> StockOut(StockOutCommand command)
     {

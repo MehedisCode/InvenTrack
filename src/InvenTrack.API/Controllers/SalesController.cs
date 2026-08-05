@@ -2,6 +2,7 @@ namespace InvenTrack.API.Controllers;
 
 using System;
 using System.Threading.Tasks;
+using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Sales.Commands.CreateSale;
 using InvenTrack.Application.Features.Sales.Commands.RefundSale;
 using InvenTrack.Application.Features.Sales.Queries.GetAllSales;
@@ -22,6 +23,7 @@ public class SalesController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>Get all sales (all roles).</summary>
     [HttpGet]
     public async Task<IActionResult> GetAllSales()
     {
@@ -29,6 +31,7 @@ public class SalesController : ControllerBase
         return Ok(sales);
     }
 
+    /// <summary>Get a sale by Id (all roles).</summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetSaleById(Guid id)
     {
@@ -39,6 +42,7 @@ public class SalesController : ControllerBase
         return Ok(sale);
     }
 
+    /// <summary>Create a new sale (all roles).</summary>
     [HttpPost]
     public async Task<IActionResult> CreateSale([FromBody] CreateSaleCommand command)
     {
@@ -46,7 +50,9 @@ public class SalesController : ControllerBase
         return CreatedAtAction(nameof(GetSaleById), new { id = sale.Id }, sale);
     }
 
+    /// <summary>Refund a sale (Admin, Manager only).</summary>
     [HttpPost("{id:guid}/refund")]
+    [Authorize(Roles = Roles.AdminOrManager)]
     public async Task<IActionResult> RefundSale(Guid id)
     {
         var result = await _mediator.Send(new RefundSaleCommand(id));
