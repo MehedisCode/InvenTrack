@@ -8,7 +8,7 @@ using InvenTrack.Domain.Entities;
 using InvenTrack.Domain.Enums;
 using MediatR;
 
-public record StockInCommand(Guid ProductId, int Quantity, string? Remarks) : IRequest<Guid>;
+public record StockInCommand(Guid ProductId, int Quantity, string Remarks) : IRequest<Guid>;
 
 public class StockInCommandHandler : IRequestHandler<StockInCommand, Guid>
 {

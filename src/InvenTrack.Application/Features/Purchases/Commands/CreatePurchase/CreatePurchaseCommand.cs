@@ -15,7 +15,6 @@ public class CreatePurchaseCommandItem
 {
     public Guid ProductId { get; set; }
     public int Quantity { get; set; }
-    public decimal UnitCost { get; set; }
 }
 
 public record CreatePurchaseCommand(
@@ -70,12 +69,14 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
                 if (product == null)
                     throw new Exception($"Product with Id {item.ProductId} not found");
 
+                var effectiveCost = product.CostPrice;
+
                 var purchaseItem = new PurchaseItem
                 {
                     ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitCost = item.UnitCost,
-                    SubTotal = item.Quantity * item.UnitCost
+                    Quantity  = item.Quantity,
+                    UnitCost  = effectiveCost,
+                    SubTotal  = item.Quantity * effectiveCost
                 };
 
                 purchase.TotalCost += purchaseItem.SubTotal;
@@ -90,7 +91,7 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
             foreach (var (product, item) in productUpdates)
             {
                 product.QuantityInStock += item.Quantity;
-                product.CostPrice = item.UnitCost;
+                // CostPrice is the source of truth — purchases read it, not write it
                 await _productRepository.UpdateAsync(product, cancellationToken);
 
                 var stockTransaction = new StockTransaction
