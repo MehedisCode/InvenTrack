@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InvenTrack.Infrastructure.Persistence.Repositories.InventoryRepository>();
         services.AddScoped<IPurchaseRepository, InvenTrack.Infrastructure.Persistence.Repositories.PurchaseRepository>();
         services.AddScoped<ISaleRepository, InvenTrack.Infrastructure.Persistence.Repositories.SaleRepository>();
+        services.AddScoped<IDashboardRepository, InvenTrack.Infrastructure.Persistence.Repositories.DashboardRepository>();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         return services;
