@@ -9,6 +9,5 @@ public class ProductDto
     public int QuantityInStock { get; set; }
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
-    public Guid SupplierId { get; set; }
-    public string SupplierName { get; set; } = string.Empty;
+    public List<string> Suppliers { get; set; } = new();
 }

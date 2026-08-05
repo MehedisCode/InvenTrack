@@ -23,10 +23,18 @@ public class SupplierRepository : ISupplierRepository
             .FirstOrDefaultAsync(s => s.Id == id && s.IsActive, cancellationToken);
     }
 
+    public async Task<Supplier?> GetByIdWithProductsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Suppliers
+            .Include(s => s.Products)
+            .FirstOrDefaultAsync(s => s.Id == id && s.IsActive, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Supplier>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Suppliers
             .AsNoTracking()
+            .Include(s => s.Products)
             .Where(s => s.IsActive)
             .ToListAsync(cancellationToken);
     }

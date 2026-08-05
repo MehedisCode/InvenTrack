@@ -33,9 +33,7 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Paginat
             UnitPrice = p.UnitPrice,
             QuantityInStock = p.QuantityInStock,
             CategoryId = p.CategoryId,
-            CategoryName = p.Category?.Name ?? string.Empty,
-            SupplierId = p.SupplierId,
-            SupplierName = p.Supplier?.CompanyName ?? string.Empty
+            CategoryName = p.Category?.Name ?? string.Empty
         }).ToList();
 
         return new PaginatedList<ProductDto>(dtos, result.TotalCount, result.PageNumber, result.PageSize);

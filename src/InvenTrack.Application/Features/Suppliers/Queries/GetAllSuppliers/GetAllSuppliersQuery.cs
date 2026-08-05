@@ -29,7 +29,8 @@ public class GetAllSuppliersQueryHandler : IRequestHandler<GetAllSuppliersQuery,
             CompanyName = s.CompanyName,
             ContactPerson = s.ContactPerson,
             Email = s.Email,
-            Phone = s.Phone
+            Phone = s.Phone,
+            Products = s.Products.Select(p => p.Name).ToList()
         }).ToList();
     }
 }

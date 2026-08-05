@@ -13,8 +13,7 @@ public record CreateProductCommand(
     string SKU,
     string? Description,
     decimal UnitPrice,
-    Guid CategoryId,
-    Guid SupplierId) : IRequest<ProductDto>;
+    Guid CategoryId) : IRequest<ProductDto>;
 
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ProductDto>
 {
@@ -35,7 +34,6 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             UnitPrice = request.UnitPrice,
             QuantityInStock = 0, // Initial quantity is 0, must use Stock In
             CategoryId = request.CategoryId,
-            SupplierId = request.SupplierId,
             IsActive = true
         };
 
@@ -48,8 +46,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             SKU = created.SKU,
             UnitPrice = created.UnitPrice,
             QuantityInStock = created.QuantityInStock,
-            CategoryId = created.CategoryId,
-            SupplierId = created.SupplierId
+            CategoryId = created.CategoryId
         };
     }
 }

@@ -10,5 +10,6 @@ public class Supplier : BaseEntity
     public string Email { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 
+    public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
     public ICollection<Product> Products { get; set; } = new List<Product>();
 }

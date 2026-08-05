@@ -3,6 +3,7 @@ using System;
 using InvenTrack.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvenTrack.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260805030943_AddSalesAndPurchases")]
+    partial class AddSalesAndPurchases
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,6 +97,9 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -107,6 +113,8 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SKU")
                         .IsUnique();
+
+                    b.HasIndex("SupplierId");
 
                     b.ToTable("Products");
 
@@ -122,6 +130,7 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                             Name = "Wireless Mouse",
                             QuantityInStock = 50,
                             SKU = "WM-001",
+                            SupplierId = new Guid("33333333-3333-3333-3333-333333333333"),
                             UnitPrice = 25.99m
                         },
                         new
@@ -135,6 +144,7 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                             Name = "Mechanical Keyboard",
                             QuantityInStock = 20,
                             SKU = "MK-002",
+                            SupplierId = new Guid("33333333-3333-3333-3333-333333333333"),
                             UnitPrice = 89.99m
                         },
                         new
@@ -148,6 +158,7 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                             Name = "A4 Printer Paper",
                             QuantityInStock = 200,
                             SKU = "PP-A4",
+                            SupplierId = new Guid("33333333-3333-3333-3333-333333333333"),
                             UnitPrice = 5.49m
                         });
                 });
@@ -626,21 +637,6 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ProductSupplier", b =>
-                {
-                    b.Property<Guid>("ProductsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("SuppliersId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("ProductsId", "SuppliersId");
-
-                    b.HasIndex("SuppliersId");
-
-                    b.ToTable("SupplierProducts", (string)null);
-                });
-
             modelBuilder.Entity("InvenTrack.Domain.Entities.Product", b =>
                 {
                     b.HasOne("InvenTrack.Domain.Entities.Category", "Category")
@@ -649,7 +645,15 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("InvenTrack.Domain.Entities.Supplier", "Supplier")
+                        .WithMany("Products")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Category");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("InvenTrack.Domain.Entities.Purchase", b =>
@@ -815,21 +819,6 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ProductSupplier", b =>
-                {
-                    b.HasOne("InvenTrack.Domain.Entities.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("InvenTrack.Domain.Entities.Supplier", null)
-                        .WithMany()
-                        .HasForeignKey("SuppliersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("InvenTrack.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
@@ -861,6 +850,8 @@ namespace InvenTrack.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InvenTrack.Domain.Entities.Supplier", b =>
                 {
+                    b.Navigation("Products");
+
                     b.Navigation("Purchases");
                 });
 

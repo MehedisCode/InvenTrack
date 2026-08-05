@@ -22,7 +22,6 @@ public class ProductRepository : IProductRepository
     {
         return await _context.Products
             .Include(p => p.Category)
-            .Include(p => p.Supplier)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken);
     }
 
@@ -30,7 +29,6 @@ public class ProductRepository : IProductRepository
     {
         var query = _context.Products
             .Include(p => p.Category)
-            .Include(p => p.Supplier)
             .Where(p => p.IsActive)
             .AsNoTracking()
             .AsQueryable();
@@ -44,11 +42,6 @@ public class ProductRepository : IProductRepository
         if (parameters.CategoryId.HasValue)
         {
             query = query.Where(p => p.CategoryId == parameters.CategoryId.Value);
-        }
-
-        if (parameters.SupplierId.HasValue)
-        {
-            query = query.Where(p => p.SupplierId == parameters.SupplierId.Value);
         }
 
         if (parameters.MinPrice.HasValue)

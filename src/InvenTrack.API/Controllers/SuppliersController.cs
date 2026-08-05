@@ -2,6 +2,7 @@ namespace InvenTrack.API.Controllers;
 
 using System;
 using System.Threading.Tasks;
+using InvenTrack.Application.Features.Suppliers.Commands.AssignProducts;
 using InvenTrack.Application.Features.Suppliers.Commands.CreateSupplier;
 using InvenTrack.Application.Features.Suppliers.Commands.DeleteSupplier;
 using InvenTrack.Application.Features.Suppliers.Commands.UpdateSupplier;
@@ -76,5 +77,17 @@ public class SuppliersController : ControllerBase
     {
         await _sender.Send(new DeleteSupplierCommand(id));
         return NoContent();
+    }
+
+    /// <summary>Assign one or more products to a supplier.</summary>
+    [HttpPost("{id}/products")]
+    public async Task<IActionResult> AssignProducts(Guid id, [FromBody] List<Guid> productIds)
+    {
+        if (productIds == null || productIds.Count == 0)
+        {
+            return BadRequest("At least one product ID must be provided.");
+        }
+        await _sender.Send(new AssignProductsToSupplierCommand(id, productIds));
+        return Ok(new { message = "Products assigned successfully." });
     }
 }

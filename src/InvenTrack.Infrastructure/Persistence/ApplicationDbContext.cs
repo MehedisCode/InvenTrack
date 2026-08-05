@@ -4,8 +4,13 @@ using InvenTrack.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
+using InvenTrack.Application.Common.Interfaces;
+
+public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplicationDbContext
 {
+    private IDatabaseFacade? _databaseFacade;
+    public new IDatabaseFacade Database => _databaseFacade ??= new DatabaseFacadeWrapper(this);
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
@@ -15,6 +20,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
+    public DbSet<Sale> Sales => Set<Sale>();
+    public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+    public DbSet<Purchase> Purchases => Set<Purchase>();
+    public DbSet<PurchaseItem> PurchaseItems => Set<PurchaseItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -30,10 +39,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(p => p.Supplier)
+            entity.HasMany(p => p.Suppliers)
                 .WithMany(s => s.Products)
-                .HasForeignKey(p => p.SupplierId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .UsingEntity(j => j.ToTable("SupplierProducts"));
         });
 
         builder.Entity<StockTransaction>(entity =>
@@ -47,6 +55,16 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
                 .WithMany(u => u.StockTransactions)
                 .HasForeignKey(st => st.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(st => st.Sale)
+                .WithMany(s => s.StockTransactions)
+                .HasForeignKey(st => st.SaleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(st => st.Purchase)
+                .WithMany(p => p.StockTransactions)
+                .HasForeignKey(st => st.PurchaseId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<User>(entity =>
@@ -54,6 +72,65 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
             entity.HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Sale>(entity =>
+        {
+            entity.HasIndex(s => s.SaleNumber).IsUnique();
+            entity.Property(s => s.TotalAmount).HasPrecision(18, 2);
+
+            entity.HasOne(s => s.User)
+                .WithMany(u => u.Sales)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<SaleItem>(entity =>
+        {
+            entity.Property(si => si.UnitPrice).HasPrecision(18, 2);
+            entity.Property(si => si.SubTotal).HasPrecision(18, 2);
+
+            entity.HasOne(si => si.Sale)
+                .WithMany(s => s.Items)
+                .HasForeignKey(si => si.SaleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(si => si.Product)
+                .WithMany()
+                .HasForeignKey(si => si.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Purchase>(entity =>
+        {
+            entity.HasIndex(p => p.PurchaseNumber).IsUnique();
+            entity.Property(p => p.TotalCost).HasPrecision(18, 2);
+
+            entity.HasOne(p => p.Supplier)
+                .WithMany(s => s.Purchases)
+                .HasForeignKey(p => p.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.User)
+                .WithMany(u => u.Purchases)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<PurchaseItem>(entity =>
+        {
+            entity.Property(pi => pi.UnitCost).HasPrecision(18, 2);
+            entity.Property(pi => pi.SubTotal).HasPrecision(18, 2);
+
+            entity.HasOne(pi => pi.Purchase)
+                .WithMany(p => p.Items)
+                .HasForeignKey(pi => pi.PurchaseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(pi => pi.Product)
+                .WithMany()
+                .HasForeignKey(pi => pi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -82,7 +159,6 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
                 UnitPrice = 25.99m, 
                 QuantityInStock = 50, 
                 CategoryId = category1Id, 
-                SupplierId = supplier1Id, 
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
@@ -95,7 +171,6 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
                 UnitPrice = 89.99m, 
                 QuantityInStock = 20, 
                 CategoryId = category1Id, 
-                SupplierId = supplier1Id, 
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
@@ -108,7 +183,6 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
                 UnitPrice = 5.49m, 
                 QuantityInStock = 200, 
                 CategoryId = category2Id, 
-                SupplierId = supplier1Id, 
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }

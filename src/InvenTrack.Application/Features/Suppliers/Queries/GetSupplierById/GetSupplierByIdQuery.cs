@@ -20,7 +20,7 @@ public class GetSupplierByIdQueryHandler : IRequestHandler<GetSupplierByIdQuery,
 
     public async Task<SupplierDto?> Handle(GetSupplierByIdQuery request, CancellationToken cancellationToken)
     {
-        var supplier = await _supplierRepository.GetByIdAsync(request.Id, cancellationToken);
+        var supplier = await _supplierRepository.GetByIdWithProductsAsync(request.Id, cancellationToken);
         
         if (supplier == null)
         {
@@ -33,7 +33,8 @@ public class GetSupplierByIdQueryHandler : IRequestHandler<GetSupplierByIdQuery,
             CompanyName = supplier.CompanyName,
             ContactPerson = supplier.ContactPerson,
             Email = supplier.Email,
-            Phone = supplier.Phone
+            Phone = supplier.Phone,
+            Products = supplier.Products.Select(p => p.Name).ToList()
         };
     }
 }

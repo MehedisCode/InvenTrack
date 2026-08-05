@@ -12,4 +12,6 @@ public class User : IdentityUser<Guid>
 
     public Role Role { get; set; } = null!;
     public ICollection<StockTransaction> StockTransactions { get; set; } = new List<StockTransaction>();
+    public ICollection<Sale> Sales { get; set; } = new List<Sale>();
+    public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
 }

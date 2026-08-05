@@ -72,6 +72,9 @@ public static class DependencyInjection
         services.AddScoped<ISupplierRepository, InvenTrack.Infrastructure.Persistence.Repositories.SupplierRepository>();
         services.AddScoped<IProductRepository, InvenTrack.Infrastructure.Persistence.Repositories.ProductRepository>();
         services.AddScoped<IInventoryRepository, InvenTrack.Infrastructure.Persistence.Repositories.InventoryRepository>();
+        services.AddScoped<IPurchaseRepository, InvenTrack.Infrastructure.Persistence.Repositories.PurchaseRepository>();
+        services.AddScoped<ISaleRepository, InvenTrack.Infrastructure.Persistence.Repositories.SaleRepository>();
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         return services;
     }
