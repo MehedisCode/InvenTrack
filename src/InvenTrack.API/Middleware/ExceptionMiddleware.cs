@@ -1,7 +1,9 @@
 namespace InvenTrack.API.Middleware;
 
+using System.Linq;
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 
 public class ExceptionMiddleware
 {
@@ -35,6 +37,12 @@ public class ExceptionMiddleware
             _logger.LogWarning(ex, "Bad request: {Message}", ex.Message);
             await WriteErrorAsync(context, HttpStatusCode.BadRequest, ex.Message);
         }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation failed: {Message}", ex.Message);
+            var errors = ex.Errors.Select(error => error.ErrorMessage).ToArray();
+            await WriteErrorAsync(context, HttpStatusCode.BadRequest, errors);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
@@ -42,12 +50,12 @@ public class ExceptionMiddleware
         }
     }
 
-    private static async Task WriteErrorAsync(HttpContext context, HttpStatusCode statusCode, string message)
+    private static async Task WriteErrorAsync(HttpContext context, HttpStatusCode statusCode, object error)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode  = (int)statusCode;
 
-        var body = JsonSerializer.Serialize(new { error = message });
+        var body = JsonSerializer.Serialize(new { errors = error });
         await context.Response.WriteAsync(body);
     }
 }
