@@ -2,9 +2,9 @@ namespace InvenTrack.API.Controllers;
 
 using System.Threading;
 using System.Threading.Tasks;
-using FluentValidation;
 using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Application.Features.Auth.DTOs;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,21 +15,18 @@ using Microsoft.AspNetCore.Mvc;
 [Produces("application/json")]
 public class AuthController : ControllerBase
 {
+    private readonly IMediator _mediator;
     private readonly IIdentityService _identityService;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IValidator<RegisterRequest> _registerValidator;
-    private readonly IValidator<LoginRequest> _loginValidator;
 
     public AuthController(
+        IMediator mediator,
         IIdentityService identityService,
-        ICurrentUserService currentUserService,
-        IValidator<RegisterRequest> registerValidator,
-        IValidator<LoginRequest> loginValidator)
+        ICurrentUserService currentUserService)
     {
-        _identityService    = identityService;
+        _mediator = mediator;
+        _identityService = identityService;
         _currentUserService = currentUserService;
-        _registerValidator  = registerValidator;
-        _loginValidator     = loginValidator;
     }
 
     /// <summary>Register a new user account.</summary>
@@ -58,13 +55,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var validationResult = await _registerValidator.ValidateAsync(request, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(new { errors = validationResult.Errors.Select(e => e.ErrorMessage) });
-        }
-
-        var result = await _identityService.RegisterAsync(request, cancellationToken);
+        var result = await _mediator.Send(request, cancellationToken);
         if (!result.Succeeded)
         {
             return BadRequest(new { errors = result.Errors });
@@ -99,13 +90,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var validationResult = await _loginValidator.ValidateAsync(request, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(new { errors = validationResult.Errors.Select(e => e.ErrorMessage) });
-        }
-
-        var result = await _identityService.LoginAsync(request, cancellationToken);
+        var result = await _mediator.Send(request, cancellationToken);
         if (!result.Succeeded)
         {
             return Unauthorized(new { errors = result.Errors });

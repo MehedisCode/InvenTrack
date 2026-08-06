@@ -1,6 +1,9 @@
 namespace InvenTrack.Application.Features.Auth.DTOs;
 
-public class RegisterRequest
+using InvenTrack.Application.Common.Models;
+using MediatR;
+
+public class RegisterRequest : IRequest<Result<AuthResponse>>
 {
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
