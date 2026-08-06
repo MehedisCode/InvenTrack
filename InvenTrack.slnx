@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/.agents/">
+    <File Path="src/.agents/AGENTS.md" />
+  </Folder>
+  <Folder Name="/.agents/agents/" />
+  <Folder Name="/.agents/agents/builder/">
+    <File Path="src/.agents/agents/builder/agent.md" />
+  </Folder>
+  <Folder Name="/.agents/agents/reviewer/" />
+  <Folder Name="/.agents/rules/" />
+  <Folder Name="/.agents/skills/" />
+  <Folder Name="/.gemini/">
+    <File Path="src/.gemini/GEMINI.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/InvenTrack.API/InvenTrack.API.csproj" />
+    <Project Path="src/InvenTrack.Application/InvenTrack.Application.csproj" Id="c86d6cd0-d1d3-4e4f-b22c-d641bf4a079a" />
+    <Project Path="src/InvenTrack.Domain/InvenTrack.Domain.csproj" Id="620d0f22-c2d7-40b4-8efb-8bf3b4467330" />
+    <Project Path="src/InvenTrack.Infrastructure/InvenTrack.Infrastructure.csproj" Id="9f53e19e-8f6f-4f0c-97cc-bce8b3489938" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvenTrack.Domain.UnitTests/InvenTrack.Domain.UnitTests.csproj" />
+    <Project Path="tests/InvenTrack.Application.UnitTests/InvenTrack.Application.UnitTests.csproj" />
+    <Project Path="tests/InvenTrack.Infrastructure.UnitTests/InvenTrack.Infrastructure.UnitTests.csproj" />
+    <Project Path="tests/InvenTrack.API.UnitTests/InvenTrack.API.UnitTests.csproj" />
+  </Folder>
+</Solution>

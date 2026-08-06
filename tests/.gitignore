@@ -1,0 +1,15 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Test execution results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+*.db
+*.log
+
+# Rider / Visual Studio specific ignores for tests (if any)
+.idea/
+.vs/
