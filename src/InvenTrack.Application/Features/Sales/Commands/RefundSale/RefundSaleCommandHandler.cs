@@ -29,51 +29,40 @@ public class RefundSaleCommandHandler : IRequestHandler<RefundSaleCommand, bool>
 
     public async Task<bool> Handle(RefundSaleCommand request, CancellationToken cancellationToken)
     {
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        var sale = await _saleRepository.GetByIdAsync(request.SaleId, cancellationToken);
+        if (sale == null)
+            throw new Exception($"Sale with Id {request.SaleId} not found");
 
-        try
+        var userId = _currentUserService.UserId ?? Guid.Empty;
+
+        foreach (var item in sale.Items)
         {
-            var sale = await _saleRepository.GetByIdAsync(request.SaleId, cancellationToken);
-            if (sale == null)
-                throw new Exception($"Sale with Id {request.SaleId} not found");
-
-            var userId = _currentUserService.UserId ?? Guid.Empty;
-
-            foreach (var item in sale.Items)
+            var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+            if (product != null)
             {
-                var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-                if (product != null)
+                // Refund stock
+                product.QuantityInStock += item.Quantity;
+                await _productRepository.UpdateAsync(product, cancellationToken);
+
+                // Create stock transaction for stock adjustment (refund)
+                var stockTransaction = new StockTransaction
                 {
-                    // Refund stock
-                    product.QuantityInStock += item.Quantity;
-                    await _productRepository.UpdateAsync(product, cancellationToken);
-
-                    // Create stock transaction for stock adjustment (refund)
-                    var stockTransaction = new StockTransaction
-                    {
-                        ProductId = item.ProductId,
-                        UserId = userId,
-                        Quantity = item.Quantity,
-                        TransactionType = TransactionType.StockIn,
-                        Remarks = $"Refund for Sale {sale.SaleNumber}",
-                        SaleId = sale.Id
-                    };
-                    await _inventoryRepository.AddTransactionAsync(stockTransaction, cancellationToken);
-                }
+                    ProductId = item.ProductId,
+                    UserId = userId,
+                    Quantity = item.Quantity,
+                    TransactionType = TransactionType.StockIn,
+                    Remarks = $"Refund for Sale {sale.SaleNumber}",
+                    SaleId = sale.Id
+                };
+                await _inventoryRepository.AddTransactionAsync(stockTransaction, cancellationToken);
             }
-
-            // A complete refund could involve marking the sale as refunded,
-            // but for now we simply revert the stock and return true.
-            // Further domain changes would be needed for sale status tracking.
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
-            return true;
         }
-        catch (Exception)
-        {
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            throw;
-        }
+
+        // A complete refund could involve marking the sale as refunded,
+        // but for now we simply revert the stock and return true.
+        // Further domain changes would be needed for sale status tracking.
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

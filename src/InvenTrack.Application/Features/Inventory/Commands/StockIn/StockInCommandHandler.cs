@@ -10,15 +10,18 @@ public class StockInCommandHandler : IRequestHandler<StockInCommand, Guid>
     private readonly IInventoryRepository _inventoryRepository;
     private readonly IProductRepository _productRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public StockInCommandHandler(
         IInventoryRepository inventoryRepository,
         IProductRepository productRepository,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IUnitOfWork unitOfWork)
     {
         _inventoryRepository = inventoryRepository;
         _productRepository = productRepository;
         _currentUserService = currentUserService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Guid> Handle(StockInCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ public class StockInCommandHandler : IRequestHandler<StockInCommand, Guid>
         };
 
         var created = await _inventoryRepository.AddTransactionAsync(transaction, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return created.Id;
     }
 }

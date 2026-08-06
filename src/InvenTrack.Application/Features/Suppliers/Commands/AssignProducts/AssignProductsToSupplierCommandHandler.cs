@@ -7,13 +7,16 @@ public class AssignProductsToSupplierCommandHandler : IRequestHandler<AssignProd
 {
     private readonly ISupplierRepository _supplierRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AssignProductsToSupplierCommandHandler(
         ISupplierRepository supplierRepository,
-        IProductRepository productRepository)
+        IProductRepository productRepository,
+        IUnitOfWork unitOfWork)
     {
         _supplierRepository = supplierRepository;
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Unit> Handle(AssignProductsToSupplierCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ public class AssignProductsToSupplierCommandHandler : IRequestHandler<AssignProd
         }
 
         await _supplierRepository.UpdateAsync(supplier, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;
     }

@@ -53,9 +53,7 @@ public class CreateSaleCommandHandlerTests
 
         var result = await handler.Handle(request, CancellationToken.None);
 
-        _unitOfWork.Verify(work => work.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWork.Verify(work => work.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
         _saleRepository.Verify(repository => repository.AddAsync(It.IsAny<Sale>(), It.IsAny<CancellationToken>()), Times.Once);
         _productRepository.Verify(repository => repository.UpdateAsync(It.Is<Product>(p => p.Id == productId && p.QuantityInStock == 8), It.IsAny<CancellationToken>()), Times.Once);
         _inventoryRepository.Verify(repository => repository.AddTransactionAsync(
@@ -84,8 +82,7 @@ public class CreateSaleCommandHandlerTests
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("Current user could not be determined.");
 
-        _unitOfWork.Verify(work => work.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWork.Verify(work => work.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -107,8 +104,7 @@ public class CreateSaleCommandHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage($"Product '{productId}' was not found.");
 
-        _unitOfWork.Verify(work => work.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWork.Verify(work => work.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -131,8 +127,7 @@ public class CreateSaleCommandHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Insufficient stock for product 'Test product'.");
 
-        _unitOfWork.Verify(work => work.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWork.Verify(work => work.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -161,8 +156,7 @@ public class CreateSaleCommandHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Unable to persist sale.");
 
-        _unitOfWork.Verify(work => work.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWork.Verify(work => work.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static CreateSaleCommand CreateSaleCommand(Guid productId, int quantity)

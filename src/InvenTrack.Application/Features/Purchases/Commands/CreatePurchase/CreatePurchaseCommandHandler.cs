@@ -30,91 +30,80 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
 
     public async Task<PurchaseDto> Handle(CreatePurchaseCommand request, CancellationToken cancellationToken)
     {
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        var userId = _currentUserService.UserId ?? Guid.Empty;
 
-        try
+        var purchase = new Purchase
         {
-            var userId = _currentUserService.UserId ?? Guid.Empty;
+            PurchaseNumber = request.PurchaseNumber,
+            SupplierId = request.SupplierId,
+            UserId = userId,
+            PurchaseDate = DateTime.UtcNow,
+            TotalCost = 0
+        };
 
-            var purchase = new Purchase
+        // Validate products and build items first (no DB writes yet for stock)
+        var productUpdates = new List<(Product product, CreatePurchaseCommandItem item)>();
+        foreach (var item in request.Items)
+        {
+            var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+            if (product == null)
+                throw new Exception($"Product with Id {item.ProductId} not found");
+
+            var effectiveCost = product.PurchasePrice;
+
+            var purchaseItem = new PurchaseItem
             {
-                PurchaseNumber = request.PurchaseNumber,
-                SupplierId = request.SupplierId,
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                UnitCost = effectiveCost,
+                SubTotal = item.Quantity * effectiveCost
+            };
+
+            purchase.TotalCost += purchaseItem.SubTotal;
+            purchase.Items.Add(purchaseItem);
+            productUpdates.Add((product, item));
+        }
+
+        // Save the Purchase (and its Items) FIRST so the PurchaseId FK exists in the DB
+        var createdPurchase = await _purchaseRepository.AddAsync(purchase, cancellationToken);
+
+        // Now update stock and insert StockTransactions that reference createdPurchase.Id
+        foreach (var (product, item) in productUpdates)
+        {
+            product.QuantityInStock += item.Quantity;
+            // PurchasePrice is the source of truth — purchases read it, not write it
+            await _productRepository.UpdateAsync(product, cancellationToken);
+
+            var stockTransaction = new StockTransaction
+            {
+                ProductId = item.ProductId,
                 UserId = userId,
-                PurchaseDate = DateTime.UtcNow,
-                TotalCost = 0
+                Quantity = item.Quantity,
+                TransactionType = TransactionType.StockIn,
+                Remarks = $"Purchase {request.PurchaseNumber}",
+                PurchaseId = createdPurchase.Id
             };
-
-            // Validate products and build items first (no DB writes yet for stock)
-            var productUpdates = new List<(Product product, CreatePurchaseCommandItem item)>();
-            foreach (var item in request.Items)
-            {
-                var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-                if (product == null)
-                    throw new Exception($"Product with Id {item.ProductId} not found");
-
-                var effectiveCost = product.PurchasePrice;
-
-                var purchaseItem = new PurchaseItem
-                {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitCost = effectiveCost,
-                    SubTotal = item.Quantity * effectiveCost
-                };
-
-                purchase.TotalCost += purchaseItem.SubTotal;
-                purchase.Items.Add(purchaseItem);
-                productUpdates.Add((product, item));
-            }
-
-            // Save the Purchase (and its Items) FIRST so the PurchaseId FK exists in the DB
-            var createdPurchase = await _purchaseRepository.AddAsync(purchase, cancellationToken);
-
-            // Now update stock and insert StockTransactions that reference createdPurchase.Id
-            foreach (var (product, item) in productUpdates)
-            {
-                product.QuantityInStock += item.Quantity;
-                // PurchasePrice is the source of truth — purchases read it, not write it
-                await _productRepository.UpdateAsync(product, cancellationToken);
-
-                var stockTransaction = new StockTransaction
-                {
-                    ProductId = item.ProductId,
-                    UserId = userId,
-                    Quantity = item.Quantity,
-                    TransactionType = TransactionType.StockIn,
-                    Remarks = $"Purchase {request.PurchaseNumber}",
-                    PurchaseId = createdPurchase.Id
-                };
-                await _inventoryRepository.AddTransactionAsync(stockTransaction, cancellationToken);
-            }
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
-
-            return new PurchaseDto
-            {
-                Id = createdPurchase.Id,
-                PurchaseNumber = createdPurchase.PurchaseNumber,
-                SupplierId = createdPurchase.SupplierId,
-                UserId = createdPurchase.UserId,
-                PurchaseDate = createdPurchase.PurchaseDate,
-                TotalCost = createdPurchase.TotalCost,
-                Items = createdPurchase.Items.Select(i => new PurchaseItemDto
-                {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity,
-                    UnitCost = i.UnitCost,
-                    SubTotal = i.SubTotal
-                }).ToList()
-            };
+            await _inventoryRepository.AddTransactionAsync(stockTransaction, cancellationToken);
         }
-        catch (Exception)
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new PurchaseDto
         {
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            throw;
-        }
+            Id = createdPurchase.Id,
+            PurchaseNumber = createdPurchase.PurchaseNumber,
+            SupplierId = createdPurchase.SupplierId,
+            UserId = createdPurchase.UserId,
+            PurchaseDate = createdPurchase.PurchaseDate,
+            TotalCost = createdPurchase.TotalCost,
+            Items = createdPurchase.Items.Select(i => new PurchaseItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                Quantity = i.Quantity,
+                UnitCost = i.UnitCost,
+                SubTotal = i.SubTotal
+            }).ToList()
+        };
     }
 }

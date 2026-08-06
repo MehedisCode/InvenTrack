@@ -6,10 +6,12 @@ using MediatR;
 public class DeleteSupplierCommandHandler : IRequestHandler<DeleteSupplierCommand, Unit>
 {
     private readonly ISupplierRepository _supplierRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteSupplierCommandHandler(ISupplierRepository supplierRepository)
+    public DeleteSupplierCommandHandler(ISupplierRepository supplierRepository, IUnitOfWork unitOfWork)
     {
         _supplierRepository = supplierRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Unit> Handle(DeleteSupplierCommand request, CancellationToken cancellationToken)
@@ -25,6 +27,7 @@ public class DeleteSupplierCommandHandler : IRequestHandler<DeleteSupplierComman
         supplier.IsActive = false;
 
         await _supplierRepository.UpdateAsync(supplier, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;
     }

@@ -6,10 +6,12 @@ using MediatR;
 public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryCommand>
 {
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteCategoryCommandHandler(ICategoryRepository categoryRepository)
+    public DeleteCategoryCommandHandler(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
     {
         _categoryRepository = categoryRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
@@ -18,5 +20,6 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
             ?? throw new KeyNotFoundException($"Category with Id ''{request.Id}'' was not found.");
 
         await _categoryRepository.DeleteAsync(category, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

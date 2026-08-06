@@ -30,94 +30,82 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, SaleD
 
     public async Task<SaleDto> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
     {
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
-        try
+        if (_currentUserService.UserId is null)
         {
-            if (_currentUserService.UserId is null)
+            throw new UnauthorizedAccessException("Current user could not be determined.");
+        }
+
+        var userId = _currentUserService.UserId.Value;
+
+        var sale = new Sale
+        {
+            SaleNumber = request.SaleNumber,
+            CustomerName = request.CustomerName,
+            UserId = userId,
+            SaleDate = DateTime.UtcNow
+        };
+
+        foreach (var item in request.Items)
+        {
+            var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+
+            if (product is null)
             {
-                throw new UnauthorizedAccessException("Current user could not be determined.");
+                throw new InvalidOperationException($"Product '{item.ProductId}' was not found.");
             }
 
-            var userId = _currentUserService.UserId.Value;
-
-            var sale = new Sale
+            if (product.QuantityInStock < item.Quantity)
             {
-                SaleNumber = request.SaleNumber,
-                CustomerName = request.CustomerName,
-                UserId = userId,
-                SaleDate = DateTime.UtcNow
+                throw new InvalidOperationException(
+                    $"Insufficient stock for product '{product.Name}'.");
+            }
+
+            var saleItem = new SaleItem
+            {
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                SellingPrice = product.SellingPrice,
+                SubTotal = item.Quantity * product.SellingPrice
             };
 
-            foreach (var item in request.Items)
-            {
-                var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+            sale.TotalAmount += saleItem.SubTotal;
+            sale.Items.Add(saleItem);
 
-                if (product is null)
-                {
-                    throw new InvalidOperationException($"Product '{item.ProductId}' was not found.");
-                }
+            product.QuantityInStock -= item.Quantity;
+            await _productRepository.UpdateAsync(product, cancellationToken);
 
-                if (product.QuantityInStock < item.Quantity)
-                {
-                    throw new InvalidOperationException(
-                        $"Insufficient stock for product '{product.Name}'.");
-                }
-
-                var saleItem = new SaleItem
+            await _inventoryRepository.AddTransactionAsync(
+                new StockTransaction
                 {
                     ProductId = item.ProductId,
+                    UserId = userId,
                     Quantity = item.Quantity,
-                    SellingPrice = product.SellingPrice,
-                    SubTotal = item.Quantity * product.SellingPrice
-                };
-
-                sale.TotalAmount += saleItem.SubTotal;
-                sale.Items.Add(saleItem);
-
-                product.QuantityInStock -= item.Quantity;
-                await _productRepository.UpdateAsync(product, cancellationToken);
-
-                await _inventoryRepository.AddTransactionAsync(
-                    new StockTransaction
-                    {
-                        ProductId = item.ProductId,
-                        UserId = userId,
-                        Quantity = item.Quantity,
-                        TransactionType = TransactionType.StockOut,
-                        Remarks = $"Sale {request.SaleNumber}",
-                        Sale = sale
-                    },
-                    cancellationToken);
-            }
-
-            await _saleRepository.AddAsync(sale, cancellationToken);
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
-
-            return new SaleDto
-            {
-                Id = sale.Id,
-                SaleNumber = sale.SaleNumber,
-                CustomerName = sale.CustomerName,
-                UserId = sale.UserId,
-                SaleDate = sale.SaleDate,
-                TotalAmount = sale.TotalAmount,
-                Items = sale.Items.Select(i => new SaleItemDto
-                {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity,
-                    SellingPrice = i.SellingPrice,
-                    SubTotal = i.SubTotal
-                }).ToList()
-            };
+                    TransactionType = TransactionType.StockOut,
+                    Remarks = $"Sale {request.SaleNumber}",
+                    Sale = sale
+                },
+                cancellationToken);
         }
-        catch
+
+        await _saleRepository.AddAsync(sale, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new SaleDto
         {
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-            throw;
-        }
+            Id = sale.Id,
+            SaleNumber = sale.SaleNumber,
+            CustomerName = sale.CustomerName,
+            UserId = sale.UserId,
+            SaleDate = sale.SaleDate,
+            TotalAmount = sale.TotalAmount,
+            Items = sale.Items.Select(i => new SaleItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                Quantity = i.Quantity,
+                SellingPrice = i.SellingPrice,
+                SubTotal = i.SubTotal
+            }).ToList()
+        };
     }
 }
