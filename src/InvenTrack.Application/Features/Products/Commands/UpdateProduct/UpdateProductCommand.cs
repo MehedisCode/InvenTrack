@@ -8,14 +8,14 @@ using InvenTrack.Application.Features.Products.DTOs;
 using MediatR;
 
 public record UpdateProductCommand(
-    Guid    Id,
-    string  Name,
-    string  SKU,
+    Guid Id,
+    string Name,
+    string SKU,
     string? Description,
     decimal UnitPrice,
     decimal CostPrice,
-    Guid    CategoryId,
-    bool    IsActive) : IRequest<ProductDto>;
+    Guid CategoryId,
+    bool IsActive) : IRequest<ProductDto>;
 
 public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, ProductDto>
 {
@@ -31,24 +31,25 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         var product = await _productRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Product with Id '{request.Id}' was not found.");
 
-        product.Name        = request.Name;
-        product.SKU         = request.SKU;
+        product.Name = request.Name;
+        product.SKU = request.SKU;
         product.Description = request.Description;
-        product.UnitPrice   = request.UnitPrice;
-        product.CostPrice   = request.CostPrice;
-        product.CategoryId  = request.CategoryId;
-        product.IsActive    = request.IsActive;
+        product.UnitPrice = request.UnitPrice;
+        product.CostPrice = request.CostPrice;
+        product.CategoryId = request.CategoryId;
+        product.IsActive = request.IsActive;
 
         await _productRepository.UpdateAsync(product, cancellationToken);
 
         return new ProductDto
         {
-            Id              = product.Id,
-            Name            = product.Name,
-            SKU             = product.SKU,
-            UnitPrice       = product.UnitPrice,
+            Id = product.Id,
+            Name = product.Name,
+            SKU = product.SKU,
+            UnitPrice = product.UnitPrice,
+            CostPrice = product.CostPrice,
             QuantityInStock = product.QuantityInStock,
-            CategoryId      = product.CategoryId
+            CategoryId = product.CategoryId
         };
     }
 }

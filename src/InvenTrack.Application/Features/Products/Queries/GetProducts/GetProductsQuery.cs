@@ -24,12 +24,13 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Paginat
     public async Task<PaginatedList<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
         var result = await _productRepository.GetProductsAsync(request, cancellationToken);
-        
+
         var dtos = result.Items.Select(p => new ProductDto
         {
             Id = p.Id,
             Name = p.Name,
             SKU = p.SKU,
+            CostPrice = p.CostPrice,
             UnitPrice = p.UnitPrice,
             QuantityInStock = p.QuantityInStock,
             CategoryId = p.CategoryId,
