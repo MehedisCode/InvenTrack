@@ -74,9 +74,9 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
                 var purchaseItem = new PurchaseItem
                 {
                     ProductId = item.ProductId,
-                    Quantity  = item.Quantity,
-                    UnitCost  = effectiveCost,
-                    SubTotal  = item.Quantity * effectiveCost
+                    Quantity = item.Quantity,
+                    UnitCost = effectiveCost,
+                    SubTotal = item.Quantity * effectiveCost
                 };
 
                 purchase.TotalCost += purchaseItem.SubTotal;

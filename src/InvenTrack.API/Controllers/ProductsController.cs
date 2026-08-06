@@ -6,6 +6,7 @@ using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Products.Commands.CreateProduct;
 using InvenTrack.Application.Features.Products.Commands.DeleteProduct;
 using InvenTrack.Application.Features.Products.Commands.UpdateProduct;
+using InvenTrack.Application.Features.Products.Queries.GetProductById;
 using InvenTrack.Application.Features.Products.Queries.GetProducts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -25,9 +26,23 @@ public class ProductsController : ControllerBase
 
     /// <summary>Get all products (all roles).</summary>
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
     {
         var result = await _sender.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>Get a product by Id (all roles).</summary>
+    /// <param name="id">The GUID of the product to retrieve.</param>
+    /// <response code="200">Returns the product.</response>
+    /// <response code="404">If the product is not found.</response>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetProductById(Guid id)
+    {
+        var result = await _sender.Send(new GetProductByIdQuery(id));
         return Ok(result);
     }
 
@@ -37,7 +52,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Create(CreateProductCommand command)
     {
         var result = await _sender.Send(command);
-        return CreatedAtAction(nameof(GetProducts), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetProductById), new { id = result.Id }, result);
     }
 
     /// <summary>Update an existing product (Admin, Manager only).</summary>
