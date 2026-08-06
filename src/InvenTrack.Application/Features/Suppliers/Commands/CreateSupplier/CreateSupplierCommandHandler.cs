@@ -8,10 +8,12 @@ using MediatR;
 public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierCommand, SupplierDto>
 {
     private readonly ISupplierRepository _supplierRepository;
+    private readonly IUnitOfWork _uow;
 
-    public CreateSupplierCommandHandler(ISupplierRepository supplierRepository)
+    public CreateSupplierCommandHandler(ISupplierRepository supplierRepository, IUnitOfWork uow)
     {
         _supplierRepository = supplierRepository;
+        _uow = uow;
     }
 
     public async Task<SupplierDto> Handle(CreateSupplierCommand request, CancellationToken cancellationToken)
@@ -26,6 +28,7 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
         };
 
         var created = await _supplierRepository.AddAsync(supplier, cancellationToken);
+        await _uow.SaveChangesAsync();
 
         return new SupplierDto
         {
