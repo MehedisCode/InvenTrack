@@ -28,24 +28,24 @@ public class DashboardRepository : IDashboardRepository
         var thirtyDaysAgo = now.AddDays(-30);
 
         // ── Overview ─────────────────────────────────────────────────────────
-        var totalProducts     = await _context.Products.CountAsync(cancellationToken);
-        var activeProducts    = await _context.Products.CountAsync(p => p.IsActive, cancellationToken);
-        var totalCategories   = await _context.Categories.CountAsync(cancellationToken);
-        var totalSuppliers    = await _context.Suppliers.CountAsync(cancellationToken);
-        var totalStockUnits   = await _context.Products.SumAsync(p => p.QuantityInStock, cancellationToken);
-        var lowStockProducts  = await _context.Products
+        var totalProducts = await _context.Products.CountAsync(cancellationToken);
+        var activeProducts = await _context.Products.CountAsync(p => p.IsActive, cancellationToken);
+        var totalCategories = await _context.Categories.CountAsync(cancellationToken);
+        var totalSuppliers = await _context.Suppliers.CountAsync(cancellationToken);
+        var totalStockUnits = await _context.Products.SumAsync(p => p.QuantityInStock, cancellationToken);
+        var lowStockProducts = await _context.Products
             .CountAsync(p => p.IsActive && p.QuantityInStock > 0 && p.QuantityInStock <= LowStockThreshold, cancellationToken);
         var outOfStockProducts = await _context.Products
             .CountAsync(p => p.IsActive && p.QuantityInStock == 0, cancellationToken);
 
         // ── Financials ───────────────────────────────────────────────────────
-        var totalInventoryValue  = await _context.Products
-            .SumAsync(p => p.CostPrice * p.QuantityInStock, cancellationToken);
-        var totalSalesRevenue    = await _context.Sales
+        var totalInventoryValue = await _context.Products
+            .SumAsync(p => p.PurchasePrice * p.QuantityInStock, cancellationToken);
+        var totalSalesRevenue = await _context.Sales
             .SumAsync(s => (decimal?)s.TotalAmount ?? 0, cancellationToken);
-        var totalPurchaseCost    = await _context.Purchases
+        var totalPurchaseCost = await _context.Purchases
             .SumAsync(p => (decimal?)p.TotalCost ?? 0, cancellationToken);
-        var totalSalesThisMonth  = await _context.Sales
+        var totalSalesThisMonth = await _context.Sales
             .Where(s => s.SaleDate >= startOfMonth)
             .SumAsync(s => (decimal?)s.TotalAmount ?? 0, cancellationToken);
         var totalPurchasesThisMonth = await _context.Purchases
@@ -53,11 +53,11 @@ public class DashboardRepository : IDashboardRepository
             .SumAsync(p => (decimal?)p.TotalCost ?? 0, cancellationToken);
 
         // ── Recent Activity ──────────────────────────────────────────────────
-        var totalSales          = await _context.Sales.CountAsync(cancellationToken);
-        var totalPurchases      = await _context.Purchases.CountAsync(cancellationToken);
-        var salesLast7Days      = await _context.Sales
+        var totalSales = await _context.Sales.CountAsync(cancellationToken);
+        var totalPurchases = await _context.Purchases.CountAsync(cancellationToken);
+        var salesLast7Days = await _context.Sales
             .CountAsync(s => s.SaleDate >= sevenDaysAgo, cancellationToken);
-        var purchasesLast7Days  = await _context.Purchases
+        var purchasesLast7Days = await _context.Purchases
             .CountAsync(p => p.PurchaseDate >= sevenDaysAgo, cancellationToken);
 
         // ── Top 5 Selling Products ───────────────────────────────────────────
@@ -66,11 +66,11 @@ public class DashboardRepository : IDashboardRepository
             .GroupBy(si => new { si.ProductId, si.Product.Name, si.Product.SKU })
             .Select(g => new TopSellingProductDto
             {
-                ProductId          = g.Key.ProductId,
-                ProductName        = g.Key.Name,
-                SKU                = g.Key.SKU,
-                TotalQuantitySold  = g.Sum(si => si.Quantity),
-                TotalRevenue       = g.Sum(si => si.SubTotal)
+                ProductId = g.Key.ProductId,
+                ProductName = g.Key.Name,
+                SKU = g.Key.SKU,
+                TotalQuantitySold = g.Sum(si => si.Quantity),
+                TotalRevenue = g.Sum(si => si.SubTotal)
             })
             .OrderByDescending(x => x.TotalQuantitySold)
             .Take(TopSellingCount)
@@ -83,11 +83,11 @@ public class DashboardRepository : IDashboardRepository
             .OrderBy(p => p.QuantityInStock)
             .Select(p => new LowStockAlertDto
             {
-                ProductId       = p.Id,
-                ProductName     = p.Name,
-                SKU             = p.SKU,
+                ProductId = p.Id,
+                ProductName = p.Name,
+                SKU = p.SKU,
                 QuantityInStock = p.QuantityInStock,
-                CategoryName    = p.Category.Name
+                CategoryName = p.Category.Name
             })
             .ToListAsync(cancellationToken);
 
@@ -97,8 +97,8 @@ public class DashboardRepository : IDashboardRepository
             .GroupBy(si => si.Product.Category.Name)
             .Select(g => new SalesByCategoryDto
             {
-                CategoryName   = g.Key,
-                TotalRevenue   = g.Sum(si => si.SubTotal),
+                CategoryName = g.Key,
+                TotalRevenue = g.Sum(si => si.SubTotal),
                 TotalItemsSold = g.Sum(si => si.Quantity)
             })
             .OrderByDescending(x => x.TotalRevenue)
@@ -120,8 +120,8 @@ public class DashboardRepository : IDashboardRepository
             .GroupBy(st => st.Date)
             .Select(g => new StockMovementDto
             {
-                Date     = g.Key,
-                StockIn  = g.Where(x => x.TransactionType == TransactionType.StockIn).Sum(x => x.Quantity),
+                Date = g.Key,
+                StockIn = g.Where(x => x.TransactionType == TransactionType.StockIn).Sum(x => x.Quantity),
                 StockOut = g.Where(x => x.TransactionType == TransactionType.StockOut).Sum(x => x.Quantity)
             })
             .OrderBy(x => x.Date)
@@ -132,33 +132,33 @@ public class DashboardRepository : IDashboardRepository
         {
             Overview = new OverviewDto
             {
-                TotalProducts      = totalProducts,
-                ActiveProducts     = activeProducts,
-                TotalCategories    = totalCategories,
-                TotalSuppliers     = totalSuppliers,
-                TotalStockUnits    = totalStockUnits,
-                LowStockProducts   = lowStockProducts,
+                TotalProducts = totalProducts,
+                ActiveProducts = activeProducts,
+                TotalCategories = totalCategories,
+                TotalSuppliers = totalSuppliers,
+                TotalStockUnits = totalStockUnits,
+                LowStockProducts = lowStockProducts,
                 OutOfStockProducts = outOfStockProducts
             },
             Financials = new FinancialsDto
             {
-                TotalInventoryValue      = totalInventoryValue,
-                TotalSalesRevenue        = totalSalesRevenue,
-                TotalPurchaseCost        = totalPurchaseCost,
-                EstimatedProfit          = totalSalesRevenue - totalPurchaseCost,
-                TotalSalesThisMonth      = totalSalesThisMonth,
-                TotalPurchasesThisMonth  = totalPurchasesThisMonth
+                TotalInventoryValue = totalInventoryValue,
+                TotalSalesRevenue = totalSalesRevenue,
+                TotalPurchaseCost = totalPurchaseCost,
+                EstimatedProfit = totalSalesRevenue - totalPurchaseCost,
+                TotalSalesThisMonth = totalSalesThisMonth,
+                TotalPurchasesThisMonth = totalPurchasesThisMonth
             },
             RecentActivity = new RecentActivityDto
             {
-                TotalSales         = totalSales,
-                TotalPurchases     = totalPurchases,
-                SalesLast7Days     = salesLast7Days,
+                TotalSales = totalSales,
+                TotalPurchases = totalPurchases,
+                SalesLast7Days = salesLast7Days,
                 PurchasesLast7Days = purchasesLast7Days
             },
-            TopSellingProducts      = topSellingProducts,
-            LowStockAlerts          = lowStockAlerts,
-            SalesByCategory         = salesByCategory,
+            TopSellingProducts = topSellingProducts,
+            LowStockAlerts = lowStockAlerts,
+            SalesByCategory = salesByCategory,
             StockMovementLast30Days = stockMovement
         };
     }

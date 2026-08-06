@@ -10,26 +10,26 @@ public class RefundSaleCommandHandler : IRequestHandler<RefundSaleCommand, bool>
     private readonly ISaleRepository _saleRepository;
     private readonly IProductRepository _productRepository;
     private readonly IInventoryRepository _inventoryRepository;
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public RefundSaleCommandHandler(
         ISaleRepository saleRepository,
         IProductRepository productRepository,
         IInventoryRepository inventoryRepository,
-        IApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _saleRepository = saleRepository;
         _productRepository = productRepository;
         _inventoryRepository = inventoryRepository;
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
 
     public async Task<bool> Handle(RefundSaleCommand request, CancellationToken cancellationToken)
     {
-        await _context.Database.BeginTransactionAsync(cancellationToken);
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
@@ -66,12 +66,13 @@ public class RefundSaleCommandHandler : IRequestHandler<RefundSaleCommand, bool>
             // but for now we simply revert the stock and return true.
             // Further domain changes would be needed for sale status tracking.
 
-            await _context.Database.CommitTransactionAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
             return true;
         }
         catch (Exception)
         {
-            await _context.Database.RollbackTransactionAsync(cancellationToken);
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             throw;
         }
     }

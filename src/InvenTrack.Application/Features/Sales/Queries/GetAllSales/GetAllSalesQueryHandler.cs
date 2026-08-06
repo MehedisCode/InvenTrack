@@ -30,7 +30,7 @@ public class GetAllSalesQueryHandler : IRequestHandler<GetAllSalesQuery, List<Sa
                 Id = i.Id,
                 ProductId = i.ProductId,
                 Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
+                SellingPrice = i.SellingPrice,
                 SubTotal = i.SubTotal
             }).ToList()
         }).ToList();

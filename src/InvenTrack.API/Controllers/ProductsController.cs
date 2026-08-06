@@ -6,6 +6,7 @@ using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Products.Commands.CreateProduct;
 using InvenTrack.Application.Features.Products.Commands.DeleteProduct;
 using InvenTrack.Application.Features.Products.Commands.UpdateProduct;
+using InvenTrack.Application.Features.Products.DTOs;
 using InvenTrack.Application.Features.Products.Queries.GetProductById;
 using InvenTrack.Application.Features.Products.Queries.GetProducts;
 using MediatR;
@@ -62,7 +63,7 @@ public class ProductsController : ControllerBase
     {
         var result = await _sender.Send(new UpdateProductCommand(
             id, request.Name, request.SKU, request.Description,
-            request.UnitPrice, request.CostPrice, request.CategoryId, request.IsActive));
+            request.PurchasePrice, request.SellingPrice, request.CategoryId, request.IsActive));
         return Ok(result);
     }
 
@@ -75,13 +76,3 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 }
-
-/// <summary>Request body for updating a product (Id comes from route).</summary>
-public record UpdateProductRequest(
-    string  Name,
-    string  SKU,
-    string? Description,
-    decimal UnitPrice,
-    decimal CostPrice,
-    Guid    CategoryId,
-    bool    IsActive);

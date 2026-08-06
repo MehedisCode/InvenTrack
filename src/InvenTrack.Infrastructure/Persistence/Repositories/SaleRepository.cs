@@ -33,10 +33,9 @@ public class SaleRepository : ISaleRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Sale> AddAsync(Sale sale, CancellationToken cancellationToken = default)
+    public Task<Sale> AddAsync(Sale sale, CancellationToken cancellationToken = default)
     {
         _context.Sales.Add(sale);
-        await _context.SaveChangesAsync(cancellationToken);
-        return sale;
+        return Task.FromResult(sale);
     }
 }

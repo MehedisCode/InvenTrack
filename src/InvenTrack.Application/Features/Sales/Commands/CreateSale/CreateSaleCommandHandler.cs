@@ -11,102 +11,112 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, SaleD
     private readonly ISaleRepository _saleRepository;
     private readonly IProductRepository _productRepository;
     private readonly IInventoryRepository _inventoryRepository;
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public CreateSaleCommandHandler(
         ISaleRepository saleRepository,
         IProductRepository productRepository,
         IInventoryRepository inventoryRepository,
-        IApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _saleRepository = saleRepository;
         _productRepository = productRepository;
         _inventoryRepository = inventoryRepository;
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
 
     public async Task<SaleDto> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
     {
-        await _context.Database.BeginTransactionAsync(cancellationToken);
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var userId = _currentUserService.UserId ?? Guid.Empty;
+            if (_currentUserService.UserId is null)
+            {
+                throw new UnauthorizedAccessException("Current user could not be determined.");
+            }
+
+            var userId = _currentUserService.UserId.Value;
 
             var sale = new Sale
             {
                 SaleNumber = request.SaleNumber,
                 CustomerName = request.CustomerName,
                 UserId = userId,
-                SaleDate = DateTime.UtcNow,
-                TotalAmount = 0
+                SaleDate = DateTime.UtcNow
             };
 
             foreach (var item in request.Items)
             {
                 var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-                if (product == null)
-                    throw new Exception($"Product with Id {item.ProductId} not found");
+
+                if (product is null)
+                {
+                    throw new InvalidOperationException($"Product '{item.ProductId}' was not found.");
+                }
 
                 if (product.QuantityInStock < item.Quantity)
-                    throw new Exception($"Insufficient stock for product {product.Name}. Available: {product.QuantityInStock}, Requested: {item.Quantity}");
+                {
+                    throw new InvalidOperationException(
+                        $"Insufficient stock for product '{product.Name}'.");
+                }
 
                 var saleItem = new SaleItem
                 {
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
-                    UnitPrice = product.UnitPrice, // snapshot UnitPrice
-                    SubTotal = item.Quantity * product.UnitPrice
+                    SellingPrice = product.SellingPrice,
+                    SubTotal = item.Quantity * product.SellingPrice
                 };
 
                 sale.TotalAmount += saleItem.SubTotal;
                 sale.Items.Add(saleItem);
 
-                // Deduct product stock
                 product.QuantityInStock -= item.Quantity;
                 await _productRepository.UpdateAsync(product, cancellationToken);
 
-                // Create stock transaction
-                var stockTransaction = new StockTransaction
-                {
-                    ProductId = item.ProductId,
-                    UserId = userId,
-                    Quantity = item.Quantity,
-                    TransactionType = TransactionType.StockOut,
-                    Remarks = $"Sale {request.SaleNumber}",
-                    Sale = sale
-                };
-                await _inventoryRepository.AddTransactionAsync(stockTransaction, cancellationToken);
+                await _inventoryRepository.AddTransactionAsync(
+                    new StockTransaction
+                    {
+                        ProductId = item.ProductId,
+                        UserId = userId,
+                        Quantity = item.Quantity,
+                        TransactionType = TransactionType.StockOut,
+                        Remarks = $"Sale {request.SaleNumber}",
+                        Sale = sale
+                    },
+                    cancellationToken);
             }
 
-            var createdSale = await _saleRepository.AddAsync(sale, cancellationToken);
+            await _saleRepository.AddAsync(sale, cancellationToken);
 
-            await _context.Database.CommitTransactionAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             return new SaleDto
             {
-                Id = createdSale.Id,
-                SaleNumber = createdSale.SaleNumber,
-                CustomerName = createdSale.CustomerName,
-                UserId = createdSale.UserId,
-                SaleDate = createdSale.SaleDate,
-                TotalAmount = createdSale.TotalAmount,
-                Items = createdSale.Items.Select(i => new SaleItemDto
+                Id = sale.Id,
+                SaleNumber = sale.SaleNumber,
+                CustomerName = sale.CustomerName,
+                UserId = sale.UserId,
+                SaleDate = sale.SaleDate,
+                TotalAmount = sale.TotalAmount,
+                Items = sale.Items.Select(i => new SaleItemDto
                 {
                     Id = i.Id,
                     ProductId = i.ProductId,
                     Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
+                    SellingPrice = i.SellingPrice,
                     SubTotal = i.SubTotal
                 }).ToList()
             };
         }
-        catch (Exception)
+        catch
         {
-            await _context.Database.RollbackTransactionAsync(cancellationToken);
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             throw;
         }
     }

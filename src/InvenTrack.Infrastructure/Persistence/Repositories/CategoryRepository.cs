@@ -38,22 +38,21 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Category> AddAsync(Category category, CancellationToken cancellationToken = default)
+    public Task<Category> AddAsync(Category category, CancellationToken cancellationToken = default)
     {
         _context.Categories.Add(category);
-        await _context.SaveChangesAsync(cancellationToken);
-        return category;
+        return Task.FromResult(category);
     }
 
-    public async Task UpdateAsync(Category category, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Category category, CancellationToken cancellationToken = default)
     {
         _context.Categories.Update(category);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(Category category, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(Category category, CancellationToken cancellationToken = default)
     {
         _context.Categories.Remove(category);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 }

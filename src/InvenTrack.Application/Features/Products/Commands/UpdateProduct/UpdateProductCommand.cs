@@ -8,7 +8,7 @@ public record UpdateProductCommand(
     string Name,
     string SKU,
     string? Description,
-    decimal UnitPrice,
-    decimal CostPrice,
+    decimal PurchasePrice,
+    decimal SellingPrice,
     Guid CategoryId,
     bool IsActive) : IRequest<ProductDto>;

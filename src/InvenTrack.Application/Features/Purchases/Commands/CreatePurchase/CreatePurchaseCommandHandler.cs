@@ -11,26 +11,26 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
     private readonly IPurchaseRepository _purchaseRepository;
     private readonly IProductRepository _productRepository;
     private readonly IInventoryRepository _inventoryRepository;
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public CreatePurchaseCommandHandler(
         IPurchaseRepository purchaseRepository,
         IProductRepository productRepository,
         IInventoryRepository inventoryRepository,
-        IApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _purchaseRepository = purchaseRepository;
         _productRepository = productRepository;
         _inventoryRepository = inventoryRepository;
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
 
     public async Task<PurchaseDto> Handle(CreatePurchaseCommand request, CancellationToken cancellationToken)
     {
-        await _context.Database.BeginTransactionAsync(cancellationToken);
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
@@ -53,7 +53,7 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
                 if (product == null)
                     throw new Exception($"Product with Id {item.ProductId} not found");
 
-                var effectiveCost = product.CostPrice;
+                var effectiveCost = product.PurchasePrice;
 
                 var purchaseItem = new PurchaseItem
                 {
@@ -75,7 +75,7 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
             foreach (var (product, item) in productUpdates)
             {
                 product.QuantityInStock += item.Quantity;
-                // CostPrice is the source of truth â€” purchases read it, not write it
+                // PurchasePrice is the source of truth — purchases read it, not write it
                 await _productRepository.UpdateAsync(product, cancellationToken);
 
                 var stockTransaction = new StockTransaction
@@ -90,7 +90,8 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
                 await _inventoryRepository.AddTransactionAsync(stockTransaction, cancellationToken);
             }
 
-            await _context.Database.CommitTransactionAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             return new PurchaseDto
             {
@@ -112,7 +113,7 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
         }
         catch (Exception)
         {
-            await _context.Database.RollbackTransactionAsync(cancellationToken);
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             throw;
         }
     }

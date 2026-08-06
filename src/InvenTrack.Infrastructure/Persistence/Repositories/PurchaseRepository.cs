@@ -33,10 +33,9 @@ public class PurchaseRepository : IPurchaseRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Purchase> AddAsync(Purchase purchase, CancellationToken cancellationToken = default)
+    public Task<Purchase> AddAsync(Purchase purchase, CancellationToken cancellationToken = default)
     {
         _context.Purchases.Add(purchase);
-        await _context.SaveChangesAsync(cancellationToken);
-        return purchase;
+        return Task.FromResult(purchase);
     }
 }

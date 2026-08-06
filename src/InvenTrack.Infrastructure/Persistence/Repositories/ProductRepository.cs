@@ -35,7 +35,7 @@ public class ProductRepository : IProductRepository
 
         if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
         {
-            query = query.Where(p => EF.Functions.ILike(p.Name, $"%{parameters.SearchTerm}%") || 
+            query = query.Where(p => EF.Functions.ILike(p.Name, $"%{parameters.SearchTerm}%") ||
                                      EF.Functions.ILike(p.SKU, $"%{parameters.SearchTerm}%"));
         }
 
@@ -46,12 +46,12 @@ public class ProductRepository : IProductRepository
 
         if (parameters.MinPrice.HasValue)
         {
-            query = query.Where(p => p.UnitPrice >= parameters.MinPrice.Value);
+            query = query.Where(p => p.SellingPrice >= parameters.MinPrice.Value);
         }
 
         if (parameters.MaxPrice.HasValue)
         {
-            query = query.Where(p => p.UnitPrice <= parameters.MaxPrice.Value);
+            query = query.Where(p => p.SellingPrice <= parameters.MaxPrice.Value);
         }
 
         if (parameters.LowStock == true)
@@ -61,7 +61,7 @@ public class ProductRepository : IProductRepository
 
         query = parameters.SortBy?.ToLower() switch
         {
-            "price" => parameters.SortDescending ? query.OrderByDescending(p => p.UnitPrice) : query.OrderBy(p => p.UnitPrice),
+            "price" => parameters.SortDescending ? query.OrderByDescending(p => p.SellingPrice) : query.OrderBy(p => p.SellingPrice),
             "name" => parameters.SortDescending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
             "quantity" => parameters.SortDescending ? query.OrderByDescending(p => p.QuantityInStock) : query.OrderBy(p => p.QuantityInStock),
             _ => query.OrderByDescending(p => p.CreatedAt) // Default sorting
@@ -75,22 +75,21 @@ public class ProductRepository : IProductRepository
         return new PaginatedList<Product>(items, count, parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
+    public Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         _context.Products.Add(product);
-        await _context.SaveChangesAsync(cancellationToken);
-        return product;
+        return Task.FromResult(product);
     }
 
-    public async Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
         _context.Products.Update(product);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
     {
         _context.Products.Remove(product);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 }

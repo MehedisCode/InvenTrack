@@ -56,10 +56,9 @@ public class InventoryRepository : IInventoryRepository
         return new PaginatedList<StockTransaction>(items, count, parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<StockTransaction> AddTransactionAsync(StockTransaction transaction, CancellationToken cancellationToken = default)
+    public Task<StockTransaction> AddTransactionAsync(StockTransaction transaction, CancellationToken cancellationToken = default)
     {
         _context.StockTransactions.Add(transaction);
-        await _context.SaveChangesAsync(cancellationToken);
-        return transaction;
+        return Task.FromResult(transaction);
     }
 }

@@ -7,6 +7,7 @@ public record CreateProductCommand(
     string Name,
     string SKU,
     string? Description,
-    decimal UnitPrice,
+    decimal PurchasePrice,
+    decimal SellingPrice,
     Guid CategoryId) : IRequest<ProductDto>;
 

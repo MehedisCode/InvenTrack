@@ -17,8 +17,10 @@ public class GetSaleByIdQueryHandler : IRequestHandler<GetSaleByIdQuery, SaleDto
     {
         var sale = await _saleRepository.GetByIdAsync(request.Id, cancellationToken);
 
-        if (sale == null)
+        if (sale is null)
+        {
             return null;
+        }
 
         return new SaleDto
         {
@@ -33,7 +35,7 @@ public class GetSaleByIdQueryHandler : IRequestHandler<GetSaleByIdQuery, SaleDto
                 Id = i.Id,
                 ProductId = i.ProductId,
                 Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
+                SellingPrice = i.SellingPrice,
                 SubTotal = i.SubTotal
             }).ToList()
         };

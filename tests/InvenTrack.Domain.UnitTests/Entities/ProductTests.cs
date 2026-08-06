@@ -25,8 +25,8 @@ public class ProductTests
             Description = description,
             SKU = sku,
             QuantityInStock = 10,
-            CostPrice = 50.0m,
-            UnitPrice = 100.0m,
+            PurchasePrice = 50.0m,
+            SellingPrice = 100.0m,
             IsActive = true
         };
 

@@ -6,6 +6,7 @@ using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Categories.Commands.CreateCategory;
 using InvenTrack.Application.Features.Categories.Commands.DeleteCategory;
 using InvenTrack.Application.Features.Categories.Commands.UpdateCategory;
+using InvenTrack.Application.Features.Categories.DTOs;
 using InvenTrack.Application.Features.Categories.Queries.GetAllCategories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -58,6 +59,3 @@ public class CategoriesController : ControllerBase
         return NoContent();
     }
 }
-
-/// <summary>Request body for updating a category (Id comes from route).</summary>
-public record UpdateCategoryRequest(string Name, string? Description);

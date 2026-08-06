@@ -43,29 +43,28 @@ public class SupplierRepository : ISupplierRepository
     {
         return await _context.Suppliers
             .AsNoTracking()
-            .Where(s => s.IsActive && 
-                        (EF.Functions.ILike(s.CompanyName, $"%{term}%") || 
-                         EF.Functions.ILike(s.ContactPerson, $"%{term}%") || 
+            .Where(s => s.IsActive &&
+                        (EF.Functions.ILike(s.CompanyName, $"%{term}%") ||
+                         EF.Functions.ILike(s.ContactPerson, $"%{term}%") ||
                          EF.Functions.ILike(s.Email, $"%{term}%")))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Supplier> AddAsync(Supplier supplier, CancellationToken cancellationToken = default)
+    public Task<Supplier> AddAsync(Supplier supplier, CancellationToken cancellationToken = default)
     {
         _context.Suppliers.Add(supplier);
-        await _context.SaveChangesAsync(cancellationToken);
-        return supplier;
+        return Task.FromResult(supplier);
     }
 
-    public async Task UpdateAsync(Supplier supplier, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Supplier supplier, CancellationToken cancellationToken = default)
     {
         _context.Suppliers.Update(supplier);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(Supplier supplier, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(Supplier supplier, CancellationToken cancellationToken = default)
     {
         _context.Suppliers.Remove(supplier);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 }

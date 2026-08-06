@@ -7,10 +7,12 @@ using MediatR;
 public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, ProductDto>
 {
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateProductCommandHandler(IProductRepository productRepository)
+    public UpdateProductCommandHandler(IProductRepository productRepository, IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ProductDto> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
@@ -21,20 +23,21 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.Name = request.Name;
         product.SKU = request.SKU;
         product.Description = request.Description;
-        product.UnitPrice = request.UnitPrice;
-        product.CostPrice = request.CostPrice;
+        product.PurchasePrice = request.PurchasePrice;
+        product.SellingPrice = request.SellingPrice;
         product.CategoryId = request.CategoryId;
         product.IsActive = request.IsActive;
 
         await _productRepository.UpdateAsync(product, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ProductDto
         {
             Id = product.Id,
             Name = product.Name,
             SKU = product.SKU,
-            UnitPrice = product.UnitPrice,
-            CostPrice = product.CostPrice,
+            PurchasePrice = product.PurchasePrice,
+            SellingPrice = product.SellingPrice,
             QuantityInStock = product.QuantityInStock,
             CategoryId = product.CategoryId
         };
