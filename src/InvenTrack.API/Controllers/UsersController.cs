@@ -7,7 +7,6 @@ using InvenTrack.API.Common;
 using InvenTrack.Application.Features.Users.Commands.CreateUser;
 using InvenTrack.Application.Features.Users.Commands.DeleteUser;
 using InvenTrack.Application.Features.Users.Commands.UpdateUser;
-using InvenTrack.Application.Features.Users.DTOs;
 using InvenTrack.Application.Features.Users.Queries.GetAllUsers;
 using InvenTrack.Application.Features.Users.Queries.GetUserById;
 using MediatR;
@@ -95,7 +94,7 @@ public class UsersController : ControllerBase
     ///       "roleName": "Manager"
     ///     }
     /// </remarks>
-    /// <param name="request">New user details including name, email, password, and role.</param>
+    /// <param name="command">New user details including name, email, password, and role.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="201">User created successfully. Returns the new user profile.</response>
     /// <response code="400">Validation failed, email already taken, or role name is invalid.</response>
@@ -106,9 +105,8 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserCommand command, CancellationToken cancellationToken)
     {
-        var command = new CreateUserCommand(request.FullName, request.Email, request.Password, request.RoleName);
         var result  = await _sender.Send(command, cancellationToken);
         if (!result.Succeeded)
         {
@@ -136,7 +134,7 @@ public class UsersController : ControllerBase
     ///     }
     /// </remarks>
     /// <param name="id">The unique identifier of the user to update.</param>
-    /// <param name="request">Updated user details.</param>
+    /// <param name="command">Updated user details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">User updated successfully. Returns the updated profile.</response>
     /// <response code="400">Validation failed or role name is invalid.</response>
@@ -147,9 +145,13 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserCommand command, CancellationToken cancellationToken)
     {
-        var command = new UpdateUserCommand(id, request.FullName, request.Email, request.RoleName, request.IsActive);
+        // Ensure the ID in the route matches the ID in the body
+        if (id != command.Id)
+        {
+            return BadRequest(new { errors = new[] { "Route ID and Body ID mismatch." } });
+        }
         var result  = await _sender.Send(command, cancellationToken);
         if (!result.Succeeded)
         {

@@ -22,19 +22,19 @@ public class IdentityService : IIdentityService
         _jwtTokenGenerator = jwtTokenGenerator;
     }
 
-    public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> RegisterAsync(string fullName, string email, string password, string roleName, CancellationToken cancellationToken = default)
     {
-        var existingUser = await _userManager.FindByEmailAsync(request.Email);
+        var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
         {
             return Result<AuthResponse>.Failure("A user with this email address already exists.");
         }
 
-        var roleName = string.IsNullOrWhiteSpace(request.RoleName) ? "Staff" : request.RoleName;
-        var role = await _roleManager.FindByNameAsync(roleName);
+        var effectiveRole = string.IsNullOrWhiteSpace(roleName) ? "Staff" : roleName;
+        var role = await _roleManager.FindByNameAsync(effectiveRole);
         if (role == null)
         {
-            role = new Role { Name = roleName };
+            role = new Role { Name = effectiveRole };
             var createRoleResult = await _roleManager.CreateAsync(role);
             if (!createRoleResult.Succeeded)
             {
@@ -45,23 +45,23 @@ public class IdentityService : IIdentityService
         var user = new User
         {
             Id = Guid.NewGuid(),
-            FullName = request.FullName,
-            Email = request.Email,
-            UserName = request.Email,
+            FullName = fullName,
+            Email = email,
+            UserName = email,
             RoleId = role.Id,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
-        var createUserResult = await _userManager.CreateAsync(user, request.Password);
+        var createUserResult = await _userManager.CreateAsync(user, password);
         if (!createUserResult.Succeeded)
         {
             return Result<AuthResponse>.Failure(createUserResult.Errors.Select(e => e.Description));
         }
 
-        await _userManager.AddToRoleAsync(user, roleName);
+        await _userManager.AddToRoleAsync(user, effectiveRole);
 
-        var (token, expiration) = _jwtTokenGenerator.GenerateToken(user, roleName);
+        var (token, expiration) = _jwtTokenGenerator.GenerateToken(user, effectiveRole);
 
         return Result<AuthResponse>.Success(new AuthResponse
         {
@@ -70,19 +70,19 @@ public class IdentityService : IIdentityService
             UserId = user.Id,
             Email = user.Email!,
             FullName = user.FullName,
-            Role = roleName
+            Role = effectiveRole
         });
     }
 
-    public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.FindByEmailAsync(email);
         if (user == null || !user.IsActive)
         {
             return Result<AuthResponse>.Failure("Invalid credentials or account is deactivated.");
         }
 
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
         if (!isPasswordValid)
         {
             return Result<AuthResponse>.Failure("Invalid credentials.");

@@ -1,11 +1,11 @@
 namespace InvenTrack.Application.Features.Auth.Validators;
 
 using FluentValidation;
-using InvenTrack.Application.Features.Auth.DTOs;
+using InvenTrack.Application.Features.Auth.Commands.Register;
 
-public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
+public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
-    public RegisterRequestValidator()
+    public RegisterCommandValidator()
     {
         RuleFor(x => x.FullName)
             .NotEmpty().WithMessage("Full name is required.")

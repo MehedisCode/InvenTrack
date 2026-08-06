@@ -1,11 +1,11 @@
 namespace InvenTrack.Application.Features.Auth.Validators;
 
 using FluentValidation;
-using InvenTrack.Application.Features.Auth.DTOs;
+using InvenTrack.Application.Features.Auth.Commands.Login;
 
-public class LoginRequestValidator : AbstractValidator<LoginRequest>
+public class LoginCommandValidator : AbstractValidator<LoginCommand>
 {
-    public LoginRequestValidator()
+    public LoginCommandValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email address is required.")
