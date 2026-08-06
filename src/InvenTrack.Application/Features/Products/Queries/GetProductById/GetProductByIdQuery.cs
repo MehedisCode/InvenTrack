@@ -26,13 +26,14 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, P
 
         return new ProductDto
         {
-            Id              = product.Id,
-            Name            = product.Name,
-            SKU             = product.SKU,
-            UnitPrice       = product.UnitPrice,
+            Id = product.Id,
+            Name = product.Name,
+            SKU = product.SKU,
+            UnitPrice = product.UnitPrice,
+            CostPrice = product.CostPrice,
             QuantityInStock = product.QuantityInStock,
-            CategoryId      = product.CategoryId,
-            CategoryName    = product.Category?.Name ?? string.Empty
+            CategoryId = product.CategoryId,
+            CategoryName = product.Category?.Name ?? string.Empty
         };
     }
 }
