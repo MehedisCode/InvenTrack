@@ -9,18 +9,16 @@ using InvenTrack.Application.Common.Models;
 using InvenTrack.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class InventoryRepository : IInventoryRepository
+public class InventoryRepository : Repository<StockTransaction>, IInventoryRepository
 {
-    private readonly ApplicationDbContext _context;
-
     public InventoryRepository(ApplicationDbContext context)
+        : base(context)
     {
-        _context = context;
     }
 
     public async Task<PaginatedList<StockTransaction>> GetTransactionsAsync(TransactionQueryParameters parameters, CancellationToken cancellationToken = default)
     {
-        var query = _context.StockTransactions
+        var query = Context.StockTransactions
             .Include(st => st.Product)
             .Include(st => st.User)
             .AsNoTracking()
@@ -58,7 +56,7 @@ public class InventoryRepository : IInventoryRepository
 
     public Task<StockTransaction> AddTransactionAsync(StockTransaction transaction, CancellationToken cancellationToken = default)
     {
-        _context.StockTransactions.Add(transaction);
+        Context.StockTransactions.Add(transaction);
         return Task.FromResult(transaction);
     }
 }

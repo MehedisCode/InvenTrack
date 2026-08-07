@@ -10,7 +10,7 @@ public class TransactionQueryParameters : SortQuery
     public DateTime? EndDate { get; set; }
 }
 
-public interface IInventoryRepository
+public interface IInventoryRepository : IRepository<StockTransaction>
 {
     Task<PaginatedList<StockTransaction>> GetTransactionsAsync(TransactionQueryParameters parameters, CancellationToken cancellationToken = default);
     Task<StockTransaction> AddTransactionAsync(StockTransaction transaction, CancellationToken cancellationToken = default);

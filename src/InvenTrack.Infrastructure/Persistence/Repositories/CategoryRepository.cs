@@ -8,51 +8,18 @@ using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class CategoryRepository : ICategoryRepository
+public class CategoryRepository : Repository<Category>, ICategoryRepository
 {
-    private readonly ApplicationDbContext _context;
-
     public CategoryRepository(ApplicationDbContext context)
+        : base(context)
     {
-        _context = context;
-    }
-
-    public async Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _context.Categories
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        return await _context.Categories
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Category>> SearchAsync(string term, CancellationToken cancellationToken = default)
     {
-        return await _context.Categories
+        return await Context.Categories
             .AsNoTracking()
             .Where(c => EF.Functions.ILike(c.Name, $"%{term}%") || (c.Description != null && EF.Functions.ILike(c.Description, $"%{term}%")))
             .ToListAsync(cancellationToken);
-    }
-
-    public Task<Category> AddAsync(Category category, CancellationToken cancellationToken = default)
-    {
-        _context.Categories.Add(category);
-        return Task.FromResult(category);
-    }
-
-    public Task UpdateAsync(Category category, CancellationToken cancellationToken = default)
-    {
-        _context.Categories.Update(category);
-        return Task.CompletedTask;
-    }
-
-    public Task DeleteAsync(Category category, CancellationToken cancellationToken = default)
-    {
-        _context.Categories.Remove(category);
-        return Task.CompletedTask;
     }
 }

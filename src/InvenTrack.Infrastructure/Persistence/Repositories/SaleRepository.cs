@@ -8,34 +8,26 @@ using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class SaleRepository : ISaleRepository
+public class SaleRepository : Repository<Sale>, ISaleRepository
 {
-    private readonly ApplicationDbContext _context;
-
     public SaleRepository(ApplicationDbContext context)
+        : base(context)
     {
-        _context = context;
     }
 
-    public async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public override async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Sales
+        return await Context.Sales
             .Include(s => s.Items)
                 .ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
+    public override async Task<IReadOnlyList<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Sales
+        return await Context.Sales
             .AsNoTracking()
             .Include(s => s.Items)
             .ToListAsync(cancellationToken);
-    }
-
-    public Task<Sale> AddAsync(Sale sale, CancellationToken cancellationToken = default)
-    {
-        _context.Sales.Add(sale);
-        return Task.FromResult(sale);
     }
 }

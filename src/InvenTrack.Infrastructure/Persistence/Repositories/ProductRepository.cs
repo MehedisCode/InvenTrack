@@ -1,6 +1,5 @@
 namespace InvenTrack.Infrastructure.Persistence.Repositories;
 
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,25 +8,23 @@ using InvenTrack.Application.Common.Models;
 using InvenTrack.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class ProductRepository : IProductRepository
+public class ProductRepository : Repository<Product>, IProductRepository
 {
-    private readonly ApplicationDbContext _context;
-
     public ProductRepository(ApplicationDbContext context)
+        : base(context)
     {
-        _context = context;
     }
 
-    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public override Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
+        return Context.Products
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken);
     }
 
     public async Task<PaginatedList<Product>> GetProductsAsync(ProductQueryParameters parameters, CancellationToken cancellationToken = default)
     {
-        var query = _context.Products
+        var query = Context.Products
             .Include(p => p.Category)
             .Where(p => p.IsActive)
             .AsNoTracking()
@@ -73,23 +70,5 @@ public class ProductRepository : IProductRepository
                                .ToListAsync(cancellationToken);
 
         return new PaginatedList<Product>(items, count, parameters.PageNumber, parameters.PageSize);
-    }
-
-    public Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
-    {
-        _context.Products.Add(product);
-        return Task.FromResult(product);
-    }
-
-    public Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
-    {
-        _context.Products.Update(product);
-        return Task.CompletedTask;
-    }
-
-    public Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
-    {
-        _context.Products.Remove(product);
-        return Task.CompletedTask;
     }
 }

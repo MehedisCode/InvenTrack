@@ -12,11 +12,7 @@ public class ProductQueryParameters : SortQuery
     public bool? LowStock { get; set; }
 }
 
-public interface IProductRepository
+public interface IProductRepository : IRepository<Product>
 {
-    Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<PaginatedList<Product>> GetProductsAsync(ProductQueryParameters parameters, CancellationToken cancellationToken = default);
-    Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Product product, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Product product, CancellationToken cancellationToken = default);
 }
