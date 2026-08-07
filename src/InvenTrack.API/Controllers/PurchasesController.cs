@@ -2,6 +2,7 @@ namespace InvenTrack.API.Controllers;
 
 using System;
 using System.Threading.Tasks;
+using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Application.Features.Purchases.Commands.CreatePurchase;
 using InvenTrack.Application.Features.Purchases.Queries.GetAllPurchases;
 using InvenTrack.Application.Features.Purchases.Queries.GetPurchaseById;
@@ -23,9 +24,16 @@ public class PurchasesController : ControllerBase
 
     /// <summary>Get all purchases (all roles).</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAllPurchases()
+    public async Task<IActionResult> GetAllPurchases([FromQuery] PurchaseQueryParameters parameters)
     {
-        var purchases = await _mediator.Send(new GetAllPurchasesQuery());
+        var purchases = await _mediator.Send(new GetAllPurchasesQuery
+        {
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize,
+            SortBy = parameters.SortBy,
+            SortDescending = parameters.SortDescending,
+            SearchTerm = parameters.SearchTerm
+        });
         return Ok(purchases);
     }
 

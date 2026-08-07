@@ -2,6 +2,7 @@ namespace InvenTrack.Application.UnitTests.Features.Suppliers.Queries.GetAllSupp
 
 using FluentAssertions;
 using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Suppliers.Queries.GetAllSuppliers;
 using InvenTrack.Domain.Entities;
 using Moq;
@@ -23,30 +24,32 @@ public class GetAllSuppliersQueryHandlerTests
         };
 
         _supplierRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(suppliers);
+            .Setup(r => r.GetAllSuppliersAsync(It.IsAny<SupplierQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Supplier>(suppliers, suppliers.Count, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllSuppliersQuery(), CancellationToken.None);
 
-        result.Should().HaveCount(2);
-        result[0].CompanyName.Should().Be("Acme");
-        result[0].Products.Should().ContainSingle().Which.Should().Be("Widget");
-        result[1].CompanyName.Should().Be("Beta");
+        result.Items.Should().HaveCount(2);
+        result.Items.First().CompanyName.Should().Be("Acme");
+        result.Items.First().Products.Should().ContainSingle().Which.Should().Be("Widget");
+        result.Items.ElementAt(1).CompanyName.Should().Be("Beta");
+        result.TotalCount.Should().Be(2);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnEmptyList_WhenNoSuppliers()
     {
         _supplierRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Supplier>());
+            .Setup(r => r.GetAllSuppliersAsync(It.IsAny<SupplierQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Supplier>(new List<Supplier>(), 0, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllSuppliersQuery(), CancellationToken.None);
 
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
     }
 }

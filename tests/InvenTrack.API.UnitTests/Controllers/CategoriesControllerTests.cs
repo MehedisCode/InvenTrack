@@ -6,6 +6,8 @@ using InvenTrack.Application.Features.Categories.Commands.CreateCategory;
 using InvenTrack.Application.Features.Categories.Commands.DeleteCategory;
 using InvenTrack.Application.Features.Categories.Commands.UpdateCategory;
 using InvenTrack.Application.Features.Categories.DTOs;
+using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Categories.Queries.GetAllCategories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -22,16 +24,17 @@ public class CategoriesControllerTests
     public async Task GetAll_ShouldReturnOk()
     {
         var categories = new List<CategoryDto> { new() { Name = "Electronics" } };
+        var paginated = new PaginatedList<CategoryDto>(categories, categories.Count, 1, 10);
         _sender
             .Setup(s => s.Send(It.IsAny<GetAllCategoriesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(categories);
+            .ReturnsAsync(paginated);
 
         var controller = CreateController();
 
-        var result = await controller.GetAll();
+        var result = await controller.GetAll(new CategoryQueryParameters());
 
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().Be(categories);
+        okResult.Value.Should().Be(paginated);
     }
 
     [Fact]

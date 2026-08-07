@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using InvenTrack.API.Common;
+using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Application.Features.Users.Commands.CreateUser;
 using InvenTrack.Application.Features.Users.Commands.DeleteUser;
 using InvenTrack.Application.Features.Users.Commands.UpdateUser;
@@ -43,9 +44,16 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllUsers([FromQuery] UserQueryParameters parameters, CancellationToken cancellationToken)
     {
-        var users = await _sender.Send(new GetAllUsersQuery(), cancellationToken);
+        var users = await _sender.Send(new GetAllUsersQuery
+        {
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize,
+            SortBy = parameters.SortBy,
+            SortDescending = parameters.SortDescending,
+            SearchTerm = parameters.SearchTerm
+        }, cancellationToken);
         return Ok(users);
     }
 

@@ -1,10 +1,11 @@
-﻿namespace InvenTrack.Application.Features.Sales.Queries.GetAllSales;
+namespace InvenTrack.Application.Features.Sales.Queries.GetAllSales;
 
 using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Sales.DTOs;
 using MediatR;
 
-public class GetAllSalesQueryHandler : IRequestHandler<GetAllSalesQuery, List<SaleDto>>
+public class GetAllSalesQueryHandler : IRequestHandler<GetAllSalesQuery, PaginatedList<SaleDto>>
 {
     private readonly ISaleRepository _saleRepository;
 
@@ -13,11 +14,11 @@ public class GetAllSalesQueryHandler : IRequestHandler<GetAllSalesQuery, List<Sa
         _saleRepository = saleRepository;
     }
 
-    public async Task<List<SaleDto>> Handle(GetAllSalesQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedList<SaleDto>> Handle(GetAllSalesQuery request, CancellationToken cancellationToken)
     {
-        var sales = await _saleRepository.GetAllAsync(cancellationToken);
+        var sales = await _saleRepository.GetAllSalesAsync(request, cancellationToken);
 
-        return sales.Select(s => new SaleDto
+        var dtos = sales.Items.Select(s => new SaleDto
         {
             Id = s.Id,
             SaleNumber = s.SaleNumber,
@@ -34,5 +35,7 @@ public class GetAllSalesQueryHandler : IRequestHandler<GetAllSalesQuery, List<Sa
                 SubTotal = i.SubTotal
             }).ToList()
         }).ToList();
+
+        return new PaginatedList<SaleDto>(dtos, sales.TotalCount, sales.PageNumber, sales.PageSize);
     }
 }

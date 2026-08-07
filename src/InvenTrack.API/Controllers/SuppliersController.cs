@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InvenTrack.API.Common;
+using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Application.Features.Suppliers.Commands.AssignProducts;
 using InvenTrack.Application.Features.Suppliers.Commands.CreateSupplier;
 using InvenTrack.Application.Features.Suppliers.Commands.DeleteSupplier;
@@ -29,9 +30,16 @@ public class SuppliersController : ControllerBase
 
     /// <summary>Get all suppliers (all roles).</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] SupplierQueryParameters parameters)
     {
-        var result = await _sender.Send(new GetAllSuppliersQuery());
+        var result = await _sender.Send(new GetAllSuppliersQuery
+        {
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize,
+            SortBy = parameters.SortBy,
+            SortDescending = parameters.SortDescending,
+            SearchTerm = parameters.SearchTerm
+        });
         return Ok(result);
     }
 

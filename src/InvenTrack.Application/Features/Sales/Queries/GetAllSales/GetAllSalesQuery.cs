@@ -1,6 +1,10 @@
-﻿namespace InvenTrack.Application.Features.Sales.Queries.GetAllSales;
+namespace InvenTrack.Application.Features.Sales.Queries.GetAllSales;
 
+using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Sales.DTOs;
 using MediatR;
 
-public record GetAllSalesQuery : IRequest<List<SaleDto>>;
+public class GetAllSalesQuery : SaleQueryParameters, IRequest<PaginatedList<SaleDto>>
+{
+}

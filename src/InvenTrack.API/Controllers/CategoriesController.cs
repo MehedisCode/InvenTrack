@@ -3,6 +3,7 @@ namespace InvenTrack.API.Controllers;
 using System;
 using System.Threading.Tasks;
 using InvenTrack.API.Common;
+using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Application.Features.Categories.Commands.CreateCategory;
 using InvenTrack.Application.Features.Categories.Commands.DeleteCategory;
 using InvenTrack.Application.Features.Categories.Commands.UpdateCategory;
@@ -26,9 +27,16 @@ public class CategoriesController : ControllerBase
 
     /// <summary>Get all categories (all roles).</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] CategoryQueryParameters parameters)
     {
-        var result = await _sender.Send(new GetAllCategoriesQuery());
+        var result = await _sender.Send(new GetAllCategoriesQuery
+        {
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize,
+            SortBy = parameters.SortBy,
+            SortDescending = parameters.SortDescending,
+            SearchTerm = parameters.SearchTerm
+        });
         return Ok(result);
     }
 

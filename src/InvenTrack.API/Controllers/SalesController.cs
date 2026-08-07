@@ -3,6 +3,7 @@ namespace InvenTrack.API.Controllers;
 using System;
 using System.Threading.Tasks;
 using InvenTrack.API.Common;
+using InvenTrack.Application.Common.Interfaces;
 using InvenTrack.Application.Features.Sales.Commands.CreateSale;
 using InvenTrack.Application.Features.Sales.Commands.RefundSale;
 using InvenTrack.Application.Features.Sales.Queries.GetAllSales;
@@ -25,9 +26,16 @@ public class SalesController : ControllerBase
 
     /// <summary>Get all sales (all roles).</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAllSales()
+    public async Task<IActionResult> GetAllSales([FromQuery] SaleQueryParameters parameters)
     {
-        var sales = await _mediator.Send(new GetAllSalesQuery());
+        var sales = await _mediator.Send(new GetAllSalesQuery
+        {
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize,
+            SortBy = parameters.SortBy,
+            SortDescending = parameters.SortDescending,
+            SearchTerm = parameters.SearchTerm
+        });
         return Ok(sales);
     }
 

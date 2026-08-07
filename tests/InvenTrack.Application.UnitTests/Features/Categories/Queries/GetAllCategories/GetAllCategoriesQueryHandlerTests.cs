@@ -2,6 +2,7 @@ namespace InvenTrack.Application.UnitTests.Features.Categories.Queries.GetAllCat
 
 using FluentAssertions;
 using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Categories.Queries.GetAllCategories;
 using InvenTrack.Domain.Entities;
 using Moq;
@@ -23,28 +24,30 @@ public class GetAllCategoriesQueryHandlerTests
         };
 
         _categoryRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(categories);
+            .Setup(r => r.GetAllCategoriesAsync(It.IsAny<CategoryQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Category>(categories, categories.Count, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllCategoriesQuery(), CancellationToken.None);
 
-        result.Should().HaveCount(2);
-        result.Select(c => c.Name).Should().ContainInOrder("Electronics", "Books");
+        result.Items.Should().HaveCount(2);
+        result.Items.Select(c => c.Name).Should().ContainInOrder("Electronics", "Books");
+        result.TotalCount.Should().Be(2);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnEmptyList_WhenNoCategories()
     {
         _categoryRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Category>());
+            .Setup(r => r.GetAllCategoriesAsync(It.IsAny<CategoryQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Category>(new List<Category>(), 0, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllCategoriesQuery(), CancellationToken.None);
 
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
     }
 }

@@ -2,6 +2,7 @@ namespace InvenTrack.Application.UnitTests.Features.Sales.Queries.GetAllSales;
 
 using FluentAssertions;
 using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Sales.Queries.GetAllSales;
 using InvenTrack.Domain.Entities;
 using Moq;
@@ -30,32 +31,34 @@ public class GetAllSalesQueryHandlerTests
         };
 
         _saleRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(sales);
+            .Setup(r => r.GetAllSalesAsync(It.IsAny<SaleQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Sale>(sales, sales.Count, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllSalesQuery(), CancellationToken.None);
 
-        result.Should().HaveCount(2);
-        result[0].SaleNumber.Should().Be("S-1");
-        result[0].CustomerName.Should().Be("Alice");
-        result[0].Items.Should().HaveCount(1);
-        result[0].Items.First().SubTotal.Should().Be(10m);
-        result[1].SaleNumber.Should().Be("S-2");
+        result.Items.Should().HaveCount(2);
+        result.Items.First().SaleNumber.Should().Be("S-1");
+        result.Items.First().CustomerName.Should().Be("Alice");
+        result.Items.First().Items.Should().HaveCount(1);
+        result.Items.First().Items.First().SubTotal.Should().Be(10m);
+        result.Items.ElementAt(1).SaleNumber.Should().Be("S-2");
+        result.TotalCount.Should().Be(2);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnEmptyList_WhenNoSales()
     {
         _saleRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Sale>());
+            .Setup(r => r.GetAllSalesAsync(It.IsAny<SaleQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Sale>(new List<Sale>(), 0, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllSalesQuery(), CancellationToken.None);
 
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
     }
 }

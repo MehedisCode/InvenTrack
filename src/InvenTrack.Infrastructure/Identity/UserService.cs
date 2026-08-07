@@ -45,6 +45,51 @@ public class UserService : IUserService
         return userDtos;
     }
 
+    public async Task<PaginatedList<UserDto>> GetUsersPaginatedAsync(UserQueryParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var query = _userManager.Users
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
+        {
+            query = query.Where(u => EF.Functions.ILike(u.FullName, $"%{parameters.SearchTerm}%") ||
+                                     EF.Functions.ILike(u.Email, $"%{parameters.SearchTerm}%"));
+        }
+
+        query = parameters.SortBy?.ToLower() switch
+        {
+            "fullname" => parameters.SortDescending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName),
+            "email" => parameters.SortDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+            "isactive" => parameters.SortDescending ? query.OrderByDescending(u => u.IsActive) : query.OrderBy(u => u.IsActive),
+            _ => query.OrderByDescending(u => u.CreatedAt)
+        };
+
+        var count = await query.CountAsync(cancellationToken);
+        var users = await query.Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                               .Take(parameters.PageSize)
+                               .ToListAsync(cancellationToken);
+
+        var items = new List<UserDto>();
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var primaryRole = roles.FirstOrDefault() ?? "Staff";
+
+            items.Add(new UserDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email!,
+                Role = primaryRole,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
+            });
+        }
+
+        return new PaginatedList<UserDto>(items, count, parameters.PageNumber, parameters.PageSize);
+    }
+
     public async Task<Result<UserDto>> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());

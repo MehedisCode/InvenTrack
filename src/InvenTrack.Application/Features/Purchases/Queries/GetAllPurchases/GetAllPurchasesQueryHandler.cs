@@ -1,10 +1,11 @@
-﻿namespace InvenTrack.Application.Features.Purchases.Queries.GetAllPurchases;
+namespace InvenTrack.Application.Features.Purchases.Queries.GetAllPurchases;
 
 using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Purchases.DTOs;
 using MediatR;
 
-public class GetAllPurchasesQueryHandler : IRequestHandler<GetAllPurchasesQuery, List<PurchaseDto>>
+public class GetAllPurchasesQueryHandler : IRequestHandler<GetAllPurchasesQuery, PaginatedList<PurchaseDto>>
 {
     private readonly IPurchaseRepository _purchaseRepository;
 
@@ -13,11 +14,11 @@ public class GetAllPurchasesQueryHandler : IRequestHandler<GetAllPurchasesQuery,
         _purchaseRepository = purchaseRepository;
     }
 
-    public async Task<List<PurchaseDto>> Handle(GetAllPurchasesQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedList<PurchaseDto>> Handle(GetAllPurchasesQuery request, CancellationToken cancellationToken)
     {
-        var purchases = await _purchaseRepository.GetAllAsync(cancellationToken);
+        var purchases = await _purchaseRepository.GetAllPurchasesAsync(request, cancellationToken);
 
-        return purchases.Select(p => new PurchaseDto
+        var dtos = purchases.Items.Select(p => new PurchaseDto
         {
             Id = p.Id,
             PurchaseNumber = p.PurchaseNumber,
@@ -34,5 +35,7 @@ public class GetAllPurchasesQueryHandler : IRequestHandler<GetAllPurchasesQuery,
                 SubTotal = i.SubTotal
             }).ToList()
         }).ToList();
+
+        return new PaginatedList<PurchaseDto>(dtos, purchases.TotalCount, purchases.PageNumber, purchases.PageSize);
     }
 }

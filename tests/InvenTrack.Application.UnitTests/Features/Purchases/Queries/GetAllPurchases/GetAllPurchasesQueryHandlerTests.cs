@@ -2,6 +2,7 @@ namespace InvenTrack.Application.UnitTests.Features.Purchases.Queries.GetAllPurc
 
 using FluentAssertions;
 using InvenTrack.Application.Common.Interfaces;
+using InvenTrack.Application.Common.Models;
 using InvenTrack.Application.Features.Purchases.Queries.GetAllPurchases;
 using InvenTrack.Domain.Entities;
 using Moq;
@@ -26,30 +27,32 @@ public class GetAllPurchasesQueryHandlerTests
         };
 
         _purchaseRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(purchases);
+            .Setup(r => r.GetAllPurchasesAsync(It.IsAny<PurchaseQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Purchase>(purchases, purchases.Count, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllPurchasesQuery(), CancellationToken.None);
 
-        result.Should().HaveCount(1);
-        result[0].PurchaseNumber.Should().Be("PO-1");
-        result[0].Items.Should().HaveCount(1);
-        result[0].Items.First().SubTotal.Should().Be(20m);
+        result.Items.Should().HaveCount(1);
+        result.Items.First().PurchaseNumber.Should().Be("PO-1");
+        result.Items.First().Items.Should().HaveCount(1);
+        result.Items.First().Items.First().SubTotal.Should().Be(20m);
+        result.TotalCount.Should().Be(1);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnEmptyList_WhenNoPurchases()
     {
         _purchaseRepository
-            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Purchase>());
+            .Setup(r => r.GetAllPurchasesAsync(It.IsAny<PurchaseQueryParameters>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaginatedList<Purchase>(new List<Purchase>(), 0, 1, 10));
 
         var handler = CreateHandler();
 
         var result = await handler.Handle(new GetAllPurchasesQuery(), CancellationToken.None);
 
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
     }
 }
